@@ -20,92 +20,96 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MemberService {
 
-    private final MemberRepository memberRepository;
-    private final AuthTokenService authTokenService;
-    private final FollowRepository followRepository;
+	private final MemberRepository memberRepository;
+	private final AuthTokenService authTokenService;
+	private final FollowRepository followRepository;
 
-    public Member join(String memberId, String password, RoleEnum role, String email, String profileImage) {
-        return join(memberId, password, role, email, profileImage, null);
-    }
+	public Member join(String memberId, String password, RoleEnum role, String email, String profileImage) {
+		return join(memberId, password, role, email, profileImage, null);
+	}
 
-    public long count() {
-        return memberRepository.count();
-    }
-    @Transactional
-    public Member join(String memberId, String password, RoleEnum role, String email, String profileImage, String introduce) {
+	public long count() {
+		return memberRepository.count();
+	}
 
-        //TODO: apikey 할당방식 지정
-        //TODO: RoleEnum 확인 이후 주입 로직 필요
-        if (role == null) {
-            role = RoleEnum.MEMBER;
-        }
-        Member member = Member.builder()
-                .memberId(memberId)
-                .password(password)
-                .profileImage(profileImage)
-                .email(email)
-                .introduce(introduce).build();
-        return memberRepository.save(member);
-    }
+	@Transactional
+	public Member join(String memberId, String password, RoleEnum role, String email, String profileImage,
+		String introduce) {
 
-    @Transactional
-    public Member join(Member member) {
-        return memberRepository.save(member);
-    }
+		//TODO: apikey 할당방식 지정
+		//TODO: RoleEnum 확인 이후 주입 로직 필요
+		if (role == null) {
+			role = RoleEnum.MEMBER;
+		}
+		Member member = Member.builder()
+			.memberId(memberId)
+			.password(password)
+			.profileImage(profileImage)
+			.email(email)
+			.introduce(introduce)
+			.build();
+		return memberRepository.save(member);
+	}
 
-    public Optional<Member> findByMemberId(String memberId) {
-        return memberRepository.findByMemberId(memberId);
-    }
+	@Transactional
+	public Member join(Member member) {
+		return memberRepository.save(member);
+	}
 
-    public Optional<Member> findById(long id) {
-        return memberRepository.findById(id);
-    }
+	public Optional<Member> findByMemberId(String memberId) {
+		return memberRepository.findByMemberId(memberId);
+	}
 
-    public String getAuthToken(Member member) {
-        return authTokenService.genAccessToken(member);
-    }
-    @Transactional
-    public void deleteMember(Long memberId) {
-        // 1. 연관된 Curation 데이터 삭제
-        //TODO: curation에 memberID로 인한 삭제 필요
-        //curationRepository.deleteByMemberId(memberId);
-        // 2. Member 삭제
-        memberRepository.deleteById(memberId);
-    }
-    @Transactional
-    public Optional<Member> getMemberByAccessToken(String accessToken) {
-        Map<String, Object> payload = authTokenService.getPayload(accessToken);
+	public Optional<Member> findById(long id) {
+		return memberRepository.findById(id);
+	}
 
-        if (payload == null) {
-            return Optional.empty();
-        }
+	public String getAuthToken(Member member) {
+		return authTokenService.genAccessToken(member);
+	}
 
-        long id = (long) payload.get("id");
-        String memberId = (String) payload.get("memberId");
+	@Transactional
+	public void deleteMember(Long memberId) {
+		// 1. 연관된 Curation 데이터 삭제
+		//TODO: curation에 memberID로 인한 삭제 필요
+		//curationRepository.deleteByMemberId(memberId);
+		// 2. Member 삭제
+		memberRepository.deleteById(memberId);
+	}
 
-        return Optional.of(
-                Member.builder()
-                        .id(id)
-                        .memberId(memberId)
-                        .build()
-        );
-    }
-    @Transactional
-    public String genAccessToken(Member member) {
-        return authTokenService.genAccessToken(member);
-    }
+	@Transactional
+	public Optional<Member> getMemberByAccessToken(String accessToken) {
+		Map<String, Object> payload = authTokenService.getPayload(accessToken);
 
-    @Transactional
-    public FollowResDto followUser(Member follower, String followeeId) {
-        Member followee = findByMemberId(followeeId)
-            .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 사용자입니다."));
+		if (payload == null) {
+			return Optional.empty();
+		}
 
-        Follow follow = new Follow();
-        follow.setFollowerAndFollowee(follower, followee);
+		long id = (long)payload.get("id");
+		String memberId = (String)payload.get("memberId");
 
-        followRepository.findByFollowerAndFollowee();
+		return Optional.of(Member.builder().id(id).memberId(memberId).build());
+	}
 
-        followRepository.save(follow);
-        return FollowResDto.fromEntity(follow);
-    }
+	@Transactional
+	public String genAccessToken(Member member) {
+		return authTokenService.genAccessToken(member);
+	}
+
+	@Transactional
+	public FollowResDto followUser(Member follower, String followeeId) {
+		Member followee = findByMemberId(followeeId)
+			.orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 사용자입니다."));
+
+		Follow follow = new Follow();
+		follow.setFollowerAndFollowee(follower, followee);
+
+		followRepository.findByFollowerAndFollowee(follower, followee)
+			.ifPresent(_f -> {
+				throw new ServiceException("400-1", "이미 팔로우중인 사용자입니다.");
+			});
+
+		follow = followRepository.save(follow);
+		return FollowResDto.fromEntity(follow);
+	}
 }

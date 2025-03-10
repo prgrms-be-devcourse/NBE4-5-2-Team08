@@ -15,8 +15,8 @@ public class FollowResDto {
 
 	public static FollowResDto fromEntity(Follow follow) {
 		FollowResDto followResDto = new FollowResDto();
-		followResDto.followedAt = follow.getFollowedAt();
 		followResDto.followee = follow.getFolloweeName();
+		followResDto.followedAt = follow.getFollowedAt();
 		return followResDto;
 	}
 }
