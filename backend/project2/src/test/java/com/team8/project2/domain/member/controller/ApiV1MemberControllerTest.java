@@ -277,4 +277,11 @@ public class ApiV1MemberControllerTest {
                 .andExpect(jsonPath("$.code").value("200-3"))
                 .andDo(print());
     }
+
+    @Test
+    @DisplayName("다른 사용자를 팔로우할 수 있다")
+    void follow() {
+
+
+    }
 }

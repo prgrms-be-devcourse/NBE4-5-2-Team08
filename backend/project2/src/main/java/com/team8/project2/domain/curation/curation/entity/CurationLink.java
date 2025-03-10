@@ -42,7 +42,6 @@ public class CurationLink {
      * 큐레이션과 링크의 복합 키를 정의하는 내부 클래스
      */
     @EqualsAndHashCode
-    @Embeddable
     @Getter
     @Setter
     public static class CurationLinkId implements Serializable {

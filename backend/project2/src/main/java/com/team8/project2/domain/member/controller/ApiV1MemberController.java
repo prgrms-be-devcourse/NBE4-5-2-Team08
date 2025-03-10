@@ -1,20 +1,28 @@
 package com.team8.project2.domain.member.controller;
 
+import java.util.Map;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.team8.project2.domain.curation.curation.service.CurationService;
 import com.team8.project2.domain.member.dto.MemberReqDTO;
 import com.team8.project2.domain.member.dto.MemberResDTO;
 import com.team8.project2.domain.member.entity.Member;
 import com.team8.project2.domain.member.service.MemberService;
+import com.team8.project2.domain.playlist.dto.FollowResDto;
 import com.team8.project2.global.Rq;
 import com.team8.project2.global.dto.RsData;
 import com.team8.project2.global.exception.ServiceException;
-import jakarta.servlet.http.HttpServletRequest;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/members")
@@ -104,5 +112,11 @@ public class ApiV1MemberController {
         return new RsData<>("200-4", "큐레이터 정보 조회 성공", responseData);
     }
 
-
+    @PostMapping("/{memberId}/follow")
+    @PreAuthorize("isAuthenticated()")
+    public RsData<FollowResDto> follow(@PathVariable String memberId) {
+        Member actor = rq.getActor();
+        FollowResDto followResDto = memberService.followUser(actor, memberId);
+        return new RsData<>("200-1", "%s님을 팔로우했습니다.".formatted(followResDto.getFollowee()), followResDto);
+    }
 }

@@ -1,14 +1,20 @@
 package com.team8.project2.domain.member.service;
 
-import com.team8.project2.domain.member.entity.Member;
-import com.team8.project2.domain.member.entity.RoleEnum;
-import com.team8.project2.domain.member.repository.MemberRepository;
-import lombok.RequiredArgsConstructor;
+import java.util.Map;
+import java.util.Optional;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Map;
-import java.util.Optional;
+import com.team8.project2.domain.member.entity.Follow;
+import com.team8.project2.domain.member.entity.Member;
+import com.team8.project2.domain.member.entity.RoleEnum;
+import com.team8.project2.domain.member.repository.FollowRepository;
+import com.team8.project2.domain.member.repository.MemberRepository;
+import com.team8.project2.domain.playlist.dto.FollowResDto;
+import com.team8.project2.global.exception.ServiceException;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -16,6 +22,7 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final AuthTokenService authTokenService;
+    private final FollowRepository followRepository;
 
     public Member join(String memberId, String password, RoleEnum role, String email, String profileImage) {
         return join(memberId, password, role, email, profileImage, null);
@@ -86,5 +93,19 @@ public class MemberService {
     @Transactional
     public String genAccessToken(Member member) {
         return authTokenService.genAccessToken(member);
+    }
+
+    @Transactional
+    public FollowResDto followUser(Member follower, String followeeId) {
+        Member followee = findByMemberId(followeeId)
+            .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 사용자입니다."));
+
+        Follow follow = new Follow();
+        follow.setFollowerAndFollowee(follower, followee);
+
+        followRepository.findByFollowerAndFollowee();
+
+        followRepository.save(follow);
+        return FollowResDto.fromEntity(follow);
     }
 }

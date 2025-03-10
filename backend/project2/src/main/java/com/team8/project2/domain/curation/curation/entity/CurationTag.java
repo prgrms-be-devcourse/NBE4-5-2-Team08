@@ -41,7 +41,6 @@ public class CurationTag {
      * 큐레이션과 태그의 복합 키를 정의하는 내부 클래스
      */
     @EqualsAndHashCode
-    @Embeddable
     @Getter
     @Setter
     public static class CurationTagId implements Serializable {
