@@ -333,8 +333,8 @@ export interface components {
             modifiedAt?: string;
             /** Format: int64 */
             authorId?: number;
-            authorName?: string;
             authorImgUrl?: string;
+            authorName?: string;
         };
         Curation: {
             /** Format: int64 */
@@ -351,10 +351,10 @@ export interface components {
             curationLinks?: components["schemas"]["CurationLink"][];
             tags?: components["schemas"]["CurationTag"][];
             comments?: components["schemas"]["Comment"][];
+            memberName?: string;
             /** Format: int64 */
             memberId?: number;
             memberImgUrl?: string;
-            memberName?: string;
         };
         CurationLink: {
             id?: components["schemas"]["CurationLinkId"];
@@ -406,9 +406,9 @@ export interface components {
             profileImage?: string;
             email?: string;
             introduce?: string;
-            member?: boolean;
-            admin?: boolean;
             authorities?: components["schemas"]["GrantedAuthority"][];
+            admin?: boolean;
+            member?: boolean;
             memberAuthoritesAsString?: string[];
         };
         RsDataLink: {
