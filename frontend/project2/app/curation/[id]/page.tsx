@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useParams } from "next/navigation"; // useParams import 추가
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -38,7 +39,8 @@ interface LinkMetaData {
   url: string;
 }
 
-export default function PostDetail({ params }: { params: { id: string } }) {
+export default function CurationDetail() {
+  const { id } = useParams(); // useParams 훅으로 id 가져오기
   const [post, setPost] = useState<CurationData | null>(null);
   const [linksMetaData, setLinksMetaData] = useState<Map<string, LinkMetaData>>(
     new Map()
@@ -49,14 +51,14 @@ export default function PostDetail({ params }: { params: { id: string } }) {
 
   // API 데이터 호출
   useEffect(() => {
+    if (!id) return; // id가 없으면 fetch 실행하지 않음
+
     async function fetchData() {
       try {
         setLoading(true);
         setError(null);
 
-        const response = await fetch(
-          `http://localhost:8080/api/v1/curation/${params.id}`
-        );
+        const response = await fetch(`http://localhost:8080/api/v1/curation/${id}`);
 
         if (!response.ok) {
           throw new Error("큐레이션 데이터를 가져오는 데 실패했습니다.");
@@ -73,7 +75,7 @@ export default function PostDetail({ params }: { params: { id: string } }) {
     }
 
     fetchData();
-  }, [params.id]);
+  }, [id]); // ✅ id를 의존성으로 추가
 
   // 모든 링크의 메타데이터 가져오기
   useEffect(() => {
@@ -85,7 +87,7 @@ export default function PostDetail({ params }: { params: { id: string } }) {
 
       // 모든 URL에 대해 병렬로 메타데이터 가져오기
       await Promise.all(
-        post.urls.map(async ({ url }) => {
+        post!.urls.map(async ({ url }) => {
           try {
             const response = await fetch(
               `http://localhost:8080/api/v1/link/preview`,
@@ -124,7 +126,7 @@ export default function PostDetail({ params }: { params: { id: string } }) {
 
     try {
       const response = await fetch(
-        `http://localhost:8080/api/v1/curation/${params.id}`,
+        `http://localhost:8080/api/v1/curation/${id}`,
         {
           method: "DELETE",
         }
@@ -237,7 +239,7 @@ export default function PostDetail({ params }: { params: { id: string } }) {
               <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
                 <div className="py-1" role="menu" aria-orientation="vertical">
                   <Link
-                    href={`/curation/${params.id}/edit`}
+                    href={`/curation/${id}/edit`}
                     className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     <Edit className="mr-2 h-4 w-4" />
@@ -404,7 +406,7 @@ export default function PostDetail({ params }: { params: { id: string } }) {
           </div>
 
           {/* 댓글 섹션 */}
-          <CommentSection postId={params.id} />
+          {typeof id === "string" && <CommentSection postId={id} />}
         </article>
       </div>
 

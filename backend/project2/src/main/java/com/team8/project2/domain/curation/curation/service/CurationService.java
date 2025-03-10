@@ -99,23 +99,26 @@ public class CurationService {
 		curation.setTitle(title);
 		curation.setContent(content);
 
-		// 큐레이션 - 링크 연결 업데이트
+//		 큐레이션 - 링크 연결 업데이트
+
 		List<CurationLink> curationLinks = urls.stream()
 			.map(url -> {
 				CurationLink curationLink = new CurationLink();
 				return curationLink.setCurationAndLink(curation, linkService.getLink(url));
 			}).collect(Collectors.toList());
 		curationLinkRepository.saveAll(curationLinks);
-		curation.setCurationLinks(curationLinks);
+		curation.getCurationLinks().clear();
+		curation.getCurationLinks().addAll(curationLinks);
+//		 큐레이션 - 태그 연결 업데이트
 
-		// 큐레이션 - 태그 연결 업데이트
 		List<CurationTag> curationTags = tags.stream()
 			.map(tag -> {
 				CurationTag curationTag = new CurationTag();
 				return curationTag.setCurationAndTag(curation, tagService.getTag(tag));
 			}).collect(Collectors.toList());
 		curationTagRepository.saveAll(curationTags);
-		curation.setTags(curationTags);
+		curation.getTags().clear();
+		curation.getTags().addAll(curationTags);
 
 		return curationRepository.save(curation);
 	}

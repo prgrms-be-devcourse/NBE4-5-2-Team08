@@ -1,5 +1,7 @@
 package com.team8.project2.domain.curation.curation.entity;
 
+import com.team8.project2.domain.comment.entity.Comment;
+import com.team8.project2.domain.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -9,10 +11,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.team8.project2.domain.comment.entity.Comment;
-import com.team8.project2.domain.curation.curation.dto.CurationDetailResDto;
-import com.team8.project2.domain.member.entity.Member;
 
 /**
  * 큐레이션(Curation) 엔티티 클래스입니다.

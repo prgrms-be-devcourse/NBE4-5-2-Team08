@@ -347,6 +347,7 @@ export default function PostList() {
                   </button>
                 </div>
 
+
                 {/* 태그 표시 */}
                 <div className="flex space-x-2 mt-2">
                   {curation.tags.map((tag) => (
