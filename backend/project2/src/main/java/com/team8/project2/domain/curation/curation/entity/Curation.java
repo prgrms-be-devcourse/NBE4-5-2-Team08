@@ -79,19 +79,19 @@ public class Curation {
     /**
      * 큐레이션에 포함된 링크 목록 (CurationLink와 1:N 관계)
      */
-    @OneToMany(mappedBy = "curation", fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(mappedBy = "curation", fetch = FetchType.LAZY, orphanRemoval = true, cascade = CascadeType.ALL)
     private List<CurationLink> curationLinks = new ArrayList<>();
 
     /**
      * 큐레이션에 포함된 태그 목록 (CurationTag와 1:N 관계)
      */
-    @OneToMany(mappedBy = "curation", fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(mappedBy = "curation", fetch = FetchType.LAZY, orphanRemoval = true, cascade = CascadeType.ALL)
     private List<CurationTag> tags = new ArrayList<>();
 
     /**
      * 큐레이션에 포함된 댓글 목록 (Comment와 1:N 관계)
      */
-    @OneToMany(mappedBy = "curation", fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(mappedBy = "curation", fetch = FetchType.LAZY, orphanRemoval = true, cascade = CascadeType.ALL)
     private List<Comment> comments = new ArrayList<>();
 
     /**

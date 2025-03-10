@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Heart, MessageSquare, Bookmark, Share2 } from "lucide-react";
 import { ClipLoader } from "react-spinners"; // 로딩 애니메이션
 
+
 // Curation 데이터 인터페이스 정의
 interface Curation {
   id: number;
@@ -79,6 +80,7 @@ export default function PostList() {
     }
   };
 
+
   // 필터 버튼 클릭 시
   const openFilterModal = () => {
     setFilterModalOpen(true);
@@ -90,6 +92,7 @@ export default function PostList() {
 
   // 필터링 조건을 기반으로 API 호출
   const applyFilter = () => {
+
     setSelectedTags(tags); // 입력한 tags를 selectedTags에 동기화
 
     const params: CurationRequestParams = {
@@ -101,6 +104,7 @@ export default function PostList() {
     fetchCurations(params);
     closeFilterModal();
   };
+  
 
   // 메타 데이터 추출 함수
   const fetchLinkMetaData = async (url: string, curationId: number) => {
@@ -136,6 +140,7 @@ export default function PostList() {
       console.error("Error fetching link metadata:", error);
     }
   };
+  
 
   // 좋아요 추가 API 호출 함수
   const likeCuration = async (id: number) => {
@@ -180,6 +185,9 @@ export default function PostList() {
       }
     });
   }, [curations, linkMetaDataList]); // linkMetaDataList도 의존성에 추가
+
+
+  
 
   // 날짜 형식화 함수
   const formatDate = (dateString: string) => {
