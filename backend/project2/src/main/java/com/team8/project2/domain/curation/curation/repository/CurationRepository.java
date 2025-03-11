@@ -2,6 +2,7 @@ package com.team8.project2.domain.curation.curation.repository;
 
 import com.team8.project2.domain.curation.curation.entity.Curation;
 
+import com.team8.project2.domain.member.entity.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -75,5 +76,4 @@ public interface CurationRepository extends JpaRepository<Curation, Long> {
 		@Param("content") String content,
 		@Param("author") String author,
 		@Param("searchOrder") String searchOrder);
-
 }

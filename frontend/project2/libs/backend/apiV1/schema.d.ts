@@ -260,7 +260,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/members/{memberId}": {
+    "/api/v1/members/{username}": {
         parameters: {
             query?: never;
             header?: never;
@@ -331,10 +331,10 @@ export interface components {
             createdAt?: string;
             /** Format: date-time */
             modifiedAt?: string;
-            authorName?: string;
             /** Format: int64 */
             authorId?: number;
             authorImgUrl?: string;
+            authorName?: string;
         };
         Curation: {
             /** Format: int64 */
@@ -407,8 +407,8 @@ export interface components {
             email?: string;
             introduce?: string;
             authorities?: components["schemas"]["GrantedAuthority"][];
-            member?: boolean;
             admin?: boolean;
+            member?: boolean;
             memberAuthoritesAsString?: string[];
         };
         RsDataLink: {
@@ -1488,7 +1488,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                memberId: string;
+                username: string;
             };
             cookie?: never;
         };

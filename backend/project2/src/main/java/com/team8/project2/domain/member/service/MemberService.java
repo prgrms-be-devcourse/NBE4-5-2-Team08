@@ -50,6 +50,10 @@ public class MemberService {
         return memberRepository.findByMemberId(memberId);
     }
 
+    public Optional<Member> findByUsername(String username) {
+        return memberRepository.findByUsername(username);
+    }
+
     public Optional<Member> findById(long id) {
         return memberRepository.findById(id);
     }
@@ -87,4 +91,5 @@ public class MemberService {
     public String genAccessToken(Member member) {
         return authTokenService.genAccessToken(member);
     }
+
 }

@@ -86,13 +86,13 @@ public class ApiV1MemberController {
         return new RsData<>("200-3", "로그아웃 되었습니다.");
     }
 
-    @GetMapping("/{memberId}")
-    public RsData<Map<String, Object>> getCuratorInfo(@PathVariable String memberId) {
-        Member member = memberService.findByMemberId(memberId).orElseThrow(
+    @GetMapping("/{username}")
+    public RsData<Map<String, Object>> getCuratorInfo(@PathVariable String username) {
+        Member member = memberService.findByUsername(username).orElseThrow(
                 () -> new ServiceException("404-1", "해당 큐레이터를 찾을 수 없습니다.")
         );
 
-        long curationCount = curationService.countByMemberId(memberId); // ✅ 코드 수정됨
+        long curationCount = curationService.countByMember(member); // ✅ 코드 수정됨
 
         Map<String, Object> responseData = Map.of(
                 "username", member.getUsername(),

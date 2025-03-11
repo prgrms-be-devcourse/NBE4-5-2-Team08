@@ -42,11 +42,12 @@ public class CurationService {
 
 	/**
 	 * ✅ 특정 큐레이터의 큐레이션 개수를 반환하는 메서드 추가
-	 * @param memberId 조회할 큐레이터의 memberId
+	 * @param member 조회할 큐레이터
 	 * @return 해당 큐레이터가 작성한 큐레이션 개수
 	 */
-	public long countByMemberId(String memberId) {
-		return curationRepository.countByMemberId(memberId);
+	@Transactional(readOnly = true)
+	public long countByMember(Member member) {
+		return curationRepository.countByMemberId(member.getMemberId());
 	}
 
 	/**
