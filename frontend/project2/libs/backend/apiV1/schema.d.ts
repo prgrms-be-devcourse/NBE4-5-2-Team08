@@ -331,10 +331,10 @@ export interface components {
             createdAt?: string;
             /** Format: date-time */
             modifiedAt?: string;
+            authorName?: string;
             /** Format: int64 */
             authorId?: number;
             authorImgUrl?: string;
-            authorName?: string;
         };
         Curation: {
             /** Format: int64 */
@@ -407,8 +407,8 @@ export interface components {
             email?: string;
             introduce?: string;
             authorities?: components["schemas"]["GrantedAuthority"][];
-            admin?: boolean;
             member?: boolean;
+            admin?: boolean;
             memberAuthoritesAsString?: string[];
         };
         RsDataLink: {
