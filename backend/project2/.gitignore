@@ -42,3 +42,6 @@ dev.mv.db
 dev.trace.db
 test.mv.db
 test.trace.db
+/backend/apiV1.json
+/.idea/
+/backend/dev.mv.db
