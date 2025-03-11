@@ -1,107 +1,69 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
   Heart,
   MessageSquare,
   Bookmark,
+  Share2,
   ArrowLeft,
-  UserPlus,
-  BookOpen,
 } from "lucide-react";
 import { ClipLoader } from "react-spinners";
-import InfiniteScroll from "react-infinite-scroll-component";
 
-// 인터페이스 정의는 이전과 동일
-interface CuratorData {
+// Curator 데이터 인터페이스 정의
+interface Curator {
   username: string;
-  nickname: string;
-  profileImageUrl: string;
-  introduction: string;
-  followerCount: number;
-  followingCount: number;
+  profileImage: string;
+  introduce: string;
+  curationCount: number;
 }
 
+// Curation 데이터 인터페이스 정의
 interface Curation {
-  curationId: number;
+  id: number;
   title: string;
   content: string;
-  link: string;
-  imageUrl: string;
+  createdBy?: string;
   createdAt: string;
-  updatedAt: string;
+  modifiedAt: string;
   likeCount: number;
-  commentCount: number;
-  bookCount: number;
-  hasLike: boolean;
-  hasBook: boolean;
-  member: {
-    username: string;
-    nickname: string;
-    profileImageUrl: string;
-  };
+  urls: { url: string }[];
+  tags: { name: string }[];
+}
+
+// Link 메타 데이터 인터페이스 정의
+interface LinkMetaData {
+  url: string;
+  title: string;
+  description: string;
+  image: string;
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-const ITEMS_PER_PAGE = 10;
 
-export default function CuratorProfile() {
-  const params = useParams();
-  const router = useRouter();
-
-  // URL 파라미터에서 실제 username 추출
-  const username = typeof params?.username === "string" ? params.username : "";
-
-  const [curator, setCurator] = useState<CuratorData | null>(null);
+export default function CuratorProfile({
+  params,
+}: {
+  params: { username: string };
+}) {
+  const [curator, setCurator] = useState<Curator | null>(null);
   const [curations, setCurations] = useState<Curation[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState<boolean>(true);
-  const [page, setPage] = useState<number>(1);
+  const [linkMetaDataList, setLinkMetaDataList] = useState<{
+    [key: number]: LinkMetaData[];
+  }>({});
 
   // 큐레이터 정보 가져오기
-  const fetchCuratorInfo = useCallback(async (username: string) => {
+  const fetchCuratorInfo = async (username: string) => {
     try {
-      setLoading(true);
-      console.log("Fetching curator info for:", username);
-      console.log("API URL:", `${API_URL}/api/v1/members/${username}`);
-
-      const response = await fetch(`${API_URL}/api/v1/members/${username}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          // 필요한 경우 여기에 인증 헤더를 추가하세요
-        },
-      });
-
-      console.log("Response status:", response.status);
-      console.log(
-        "Response headers:",
-        Object.fromEntries(response.headers.entries())
-      );
-
-      const responseText = await response.text();
-      console.log("Response body:", responseText);
-
+      const response = await fetch(`${API_URL}/api/v1/members/${username}`);
       if (!response.ok) {
-        throw new Error(
-          `HTTP error! status: ${response.status}, body: ${responseText}`
-        );
+        throw new Error("큐레이터 정보를 불러오는 데 실패했습니다.");
       }
-
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch (e) {
-        console.error("Error parsing JSON:", e);
-        throw new Error("Invalid JSON in response");
-      }
-
-      console.log("Parsed data:", data);
-
+      const data = await response.json();
       if (data.code === "200-4") {
         setCurator(data.data);
       } else {
@@ -110,211 +72,267 @@ export default function CuratorProfile() {
     } catch (error) {
       console.error("Error fetching curator info:", error);
       setError((error as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // 큐레이터의 큐레이션 목록 가져오기 (이전과 동일)
-  const fetchCuratorCurations = useCallback(
-    async (username: string, page: number) => {
-      try {
-        setLoading(true);
-        const response = await fetch(
-          `${API_URL}/api/v1/curations/members/${username}?page=${page}&size=${ITEMS_PER_PAGE}`
-        );
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        if (data.code === "200-4") {
-          if (page === 1) {
-            setCurations(data.data.content);
-          } else {
-            setCurations((prevCurations) => [
-              ...prevCurations,
-              ...data.data.content,
-            ]);
-          }
-          setHasMore(!data.data.last);
-        } else {
-          throw new Error(
-            data.msg || "큐레이션 목록을 가져오는데 실패했습니다."
-          );
-        }
-      } catch (error) {
-        setError((error as Error).message);
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
-
-  // 추가 큐레이션 로드 (이전과 동일)
-  const loadMoreCurations = async () => {
-    if (username && hasMore) {
-      setPage((prevPage) => prevPage + 1);
-      fetchCuratorCurations(username, page + 1);
     }
   };
 
-  // 컴포넌트 마운트 시 API 호출
-  useEffect(() => {
-    if (!username) {
-      setError("유효하지 않은 사용자 이름입니다.");
-      return;
+  // 큐레이터의 큐레이션 목록 가져오기
+  const fetchCuratorCurations = async (username: string) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/v1/curation?author=${username}`
+      );
+      if (!response.ok) {
+        throw new Error("큐레이션 목록을 불러오는 데 실패했습니다.");
+      }
+      const data = await response.json();
+      if (data && data.data) {
+        setCurations(data.data);
+      } else {
+        console.error("No curation data found in the response");
+        setCurations([]);
+      }
+    } catch (error) {
+      console.error("Error fetching curator curations:", error);
+      setError((error as Error).message);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    console.log("현재 접속한 URL의 username:", username);
-    console.log("API URL:", process.env.NEXT_PUBLIC_API_URL);
+  // 메타 데이터 추출 함수
+  const fetchLinkMetaData = async (url: string, curationId: number) => {
+    try {
+      const response = await fetch(`${API_URL}/api/v1/link/preview`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url: url }),
+      });
 
-    // 실제 사용자 데이터 가져오기
-    fetchCuratorInfo(username);
-    fetchCuratorCurations(username, 1);
-  }, [username, fetchCuratorInfo, fetchCuratorCurations]);
+      if (!response.ok) {
+        throw new Error("Failed to fetch link metadata");
+      }
 
-  // 날짜 형식화 함수 (이전과 동일)
-  const formatDate = (dateString: string): string => {
+      const data = await response.json();
+      setLinkMetaDataList((prev) => {
+        const existingMetaData = prev[curationId] || [];
+        const newMetaData = existingMetaData.filter(
+          (meta) => meta.url !== data.data.url
+        );
+        return {
+          ...prev,
+          [curationId]: [...newMetaData, data.data],
+        };
+      });
+    } catch (error) {
+      console.error("Error fetching link metadata:", error);
+    }
+  };
+
+  // 큐레이션마다 메타 데이터 추출
+  useEffect(() => {
+    curations.forEach((curation) => {
+      if (curation.urls && curation.urls.length > 0) {
+        curation.urls.forEach((urlObj) => {
+          if (
+            !linkMetaDataList[curation.id]?.some(
+              (meta) => meta.url === urlObj.url
+            )
+          ) {
+            fetchLinkMetaData(urlObj.url, curation.id);
+          }
+        });
+      }
+    });
+  }, [curations, linkMetaDataList]);
+
+  // 날짜 형식화 함수
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${year}년 ${month}월 ${day}일 ${hours}:${minutes}`;
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <ClipLoader size={50} color="#3498db" />
-      </div>
-    );
-  }
+  // 컴포넌트 마운트 시 API 호출
+  useEffect(() => {
+    fetchCuratorInfo(params.username);
+    fetchCuratorCurations(params.username);
+  }, [params.username]);
 
-  // 에러 상태 표시 개선
-  if (error) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div
-          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
-          role="alert"
-        >
-          <strong className="font-bold">오류 발생!</strong>
-          <span className="block sm:inline"> {error}</span>
-          <div className="mt-2 text-sm">
-            <p>API URL: {process.env.NEXT_PUBLIC_API_URL}</p>
-            <p>Username: {username}</p>
-            <p>현재 URL: {window.location.href}</p>
-          </div>
-          <div className="mt-4">
-            <Link
-              href="/"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
-            >
-              홈으로 돌아가기
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // 렌더링 부분은 이전과 동일
   return (
-    <div className="container mx-auto mt-8">
-      <Link href="/" className="inline-block mb-4">
-        <ArrowLeft className="mr-2 inline-block align-middle" /> Back to Home
-      </Link>
+    <div className="container mx-auto px-4 py-8">
+      {/* 뒤로 가기 버튼 */}
+      <div className="mb-6">
+        <Link
+          href="/"
+          className="inline-flex items-center text-sm text-gray-500 hover:text-black"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          홈으로 돌아가기
+        </Link>
+      </div>
 
-      {curator && (
-        <div className="flex items-center mb-8">
-          <Image
-            src={curator.profileImageUrl || "/default-profile.png"}
-            alt={`${curator.nickname} 프로필`}
-            width={80}
-            height={80}
-            className="rounded-full mr-4"
-          />
-          <div>
-            <h1 className="text-2xl font-bold">{curator.nickname}</h1>
-            <p className="text-gray-600">@{curator.username}</p>
-            <p className="text-gray-700 mt-2">{curator.introduction}</p>
-            <div className="flex mt-2">
-              <button className="flex items-center bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2">
-                <UserPlus className="mr-2" size={16} /> Follow
-              </button>
-              <Link
-                href={`/curator/${curator.username}/books`}
-                className="flex items-center bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-              >
-                <BookOpen className="mr-2" size={16} /> Books
-              </Link>
-            </div>
-          </div>
+      {loading ? (
+        <div className="flex justify-center items-center py-10">
+          <ClipLoader size={50} color="#3498db" />
         </div>
-      )}
-
-      <InfiniteScroll
-        dataLength={curations.length}
-        next={loadMoreCurations}
-        hasMore={hasMore}
-        loader={
-          <div className="text-center py-4">
-            <ClipLoader size={20} color="#3498db" />
-          </div>
-        }
-        endMessage={
-          <p className="text-center py-4">
-            <b>모든 큐레이션을 불러왔습니다.</b>
-          </p>
-        }
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {curations.map((curation) => (
-            <div
-              key={curation.curationId}
-              className="bg-white rounded-lg shadow-md overflow-hidden"
-            >
-              <Image
-                src={curation.imageUrl || "/placeholder.svg"}
-                alt={curation.title}
-                width={600}
-                height={400}
-                className="w-full h-48 object-cover"
-              />
-              <div className="p-4">
-                <h2 className="text-xl font-semibold mb-2">{curation.title}</h2>
-                <p className="text-gray-700 mb-2">
-                  {curation.content.substring(0, 100)}...
-                </p>
-                <a
-                  href={curation.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 hover:underline block mb-2"
-                >
-                  Read More
-                </a>
-                <div className="flex items-center justify-between text-gray-500">
-                  <div className="flex items-center">
-                    <Heart className="mr-1" size={16} /> {curation.likeCount}
-                    <MessageSquare className="ml-2 mr-1" size={16} />{" "}
-                    {curation.commentCount}
-                    <Bookmark className="ml-2 mr-1" size={16} />{" "}
-                    {curation.bookCount}
+      ) : error ? (
+        <div className="p-6 bg-red-50 text-red-600 rounded-lg border border-red-200">
+          <p className="font-medium">오류가 발생했습니다</p>
+          <p className="text-sm mt-1">{error}</p>
+        </div>
+      ) : curator ? (
+        <>
+          {/* 큐레이터 프로필 */}
+          <div className="mb-8 p-6 bg-white rounded-lg border shadow-sm">
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+              <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                <Image
+                  src={
+                    curator.profileImage ||
+                    `/placeholder.svg?height=96&width=96`
+                  }
+                  alt={curator.username}
+                  width={96}
+                  height={96}
+                  className="object-cover"
+                />
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <h1 className="text-2xl font-bold mb-2">{curator.username}</h1>
+                <p className="text-gray-600 mb-4">{curator.introduce}</p>
+                <div className="flex flex-wrap justify-center md:justify-start gap-4">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold">
+                      {curator.curationCount}
+                    </p>
+                    <p className="text-sm text-gray-500">큐레이션</p>
                   </div>
-                  <span className="text-sm">
-                    Posted on: {formatDate(curation.createdAt)}
-                  </span>
                 </div>
               </div>
+              <div className="flex-shrink-0">
+                <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                  팔로우
+                </button>
+              </div>
             </div>
-          ))}
-        </div>
-      </InfiniteScroll>
+          </div>
+
+          {/* 큐레이션 목록 제목 */}
+          <h2 className="text-xl font-bold mb-6 border-b pb-2">
+            {curator.username}님의 큐레이션 ({curator.curationCount})
+          </h2>
+
+          {/* 큐레이션 목록 */}
+          {curations.length === 0 ? (
+            <div className="p-10 bg-gray-50 rounded-lg border text-center">
+              <p className="text-gray-500">아직 작성한 큐레이션이 없습니다.</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {curations.map((curation) => (
+                <div key={curation.id} className="space-y-4 border-b pb-6">
+                  <div className="flex items-center space-x-2">
+                    <p className="text-xs text-gray-500">{`작성된 날짜 : ${formatDate(
+                      curation.createdAt
+                    )}`}</p>
+                  </div>
+
+                  <div>
+                    <Link href={`/curation/${curation.id}`} className="group">
+                      <h2 className="text-xl font-bold group-hover:text-blue-600">
+                        {curation.title}
+                      </h2>
+                    </Link>
+                    <p className="mt-2 text-gray-600">
+                      {curation.content.length > 100
+                        ? `${curation.content.substring(0, 100)}...`
+                        : curation.content}
+                    </p>
+                    <Link
+                      href={`/curation/${curation.id}`}
+                      className="mt-2 inline-block text-sm font-medium text-blue-600"
+                    >
+                      더보기
+                    </Link>
+                  </div>
+
+                  {/* 태그 표시 */}
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {curation.tags.map((tag) => (
+                      <span
+                        key={tag.name}
+                        className={`px-3 py-1 text-sm font-medium rounded-full cursor-pointer ${
+                          tag.name === "포털"
+                            ? "bg-blue-100 text-blue-800"
+                            : tag.name === "개발"
+                            ? "bg-green-100 text-green-800"
+                            : tag.name === "디자인"
+                            ? "bg-purple-100 text-purple-800"
+                            : tag.name === "AI"
+                            ? "bg-red-100 text-red-800"
+                            : tag.name === "생산성"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        #{tag.name}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* 메타 데이터 카드 */}
+                  {linkMetaDataList[curation.id]?.map((metaData, index) => (
+                    <Link key={index} href={metaData.url} passHref>
+                      <div className="mt-4 rounded-lg border p-4 cursor-pointer hover:bg-gray-50 transition-colors">
+                        <div className="flex items-center space-x-3">
+                          <img
+                            src={metaData.image || "/placeholder.svg"}
+                            alt="Preview"
+                            className="h-12 w-12 rounded-lg object-cover"
+                          />
+                          <div>
+                            <h3 className="font-medium">{metaData.title}</h3>
+                            <p className="text-sm text-gray-600 line-clamp-1">
+                              {metaData.description}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-1 text-sm text-gray-500">
+                        <Heart className="h-4 w-4" />
+                        <span>{curation.likeCount}</span>
+                      </div>
+                      <div className="flex items-center space-x-1 text-sm text-gray-500">
+                        <MessageSquare className="h-4 w-4" />
+                        <span>0</span>
+                      </div>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button>
+                        <Bookmark className="h-4 w-4 text-gray-500" />
+                      </button>
+                      <button>
+                        <Share2 className="h-4 w-4 text-gray-500" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      ) : null}
     </div>
   );
 }
