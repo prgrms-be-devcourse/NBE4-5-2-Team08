@@ -100,12 +100,13 @@ export default function FollowingCurations() {
       const data = await response.json();
       setLinkMetaDataList((prev) => {
         const existingMetaData = prev[curationId] || [];
+        // 중복된 메타 데이터가 추가되지 않도록 필터링
         const newMetaData = existingMetaData.filter(
-          (meta) => meta.url !== data.data.url
+          (meta) => meta.url !== data.data.url // 이미 존재하는 URL은 제외
         );
         return {
           ...prev,
-          [curationId]: [...newMetaData, data.data],
+          [curationId]: [...newMetaData, data.data], // 중복 제거 후 메타 데이터 추가
         };
       });
     } catch (error) {
@@ -124,17 +125,20 @@ export default function FollowingCurations() {
     curations.forEach((curation) => {
       if (curation.urls && curation.urls.length > 0) {
         curation.urls.forEach((urlObj) => {
+          // 이미 메타데이터가 있거나 실패한 URL이면 스킵
           if (
-            !linkMetaDataList[curation.id]?.some(
+            linkMetaDataList[curation.id]?.some(
               (meta) => meta.url === urlObj.url
-            )
+            ) ||
+            failedUrls.has(urlObj.url)
           ) {
-            fetchLinkMetaData(urlObj.url, curation.id);
+            return;
           }
+          fetchLinkMetaData(urlObj.url, curation.id);
         });
       }
     });
-  }, [curations, linkMetaDataList]);
+  }, [curations]); // linkMetaDataList 의존성 제거
 
   // 좋아요 추가 API 호출 함수
   const likeCuration = async (id: number) => {

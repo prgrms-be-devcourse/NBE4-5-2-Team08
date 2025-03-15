@@ -1,24 +1,29 @@
 package com.team8.project2.domain.member.service;
 
+import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import com.team8.project2.domain.curation.curation.repository.CurationRepository;
+import com.team8.project2.domain.image.service.S3Uploader;
 import com.team8.project2.domain.member.dto.CuratorInfoDto;
 import com.team8.project2.domain.member.dto.MemberReqDTO;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.team8.project2.domain.member.dto.FollowingResDto;
 import com.team8.project2.domain.member.dto.UnfollowResDto;
 import com.team8.project2.domain.member.entity.Follow;
 import com.team8.project2.domain.member.entity.Member;
 import com.team8.project2.domain.member.entity.RoleEnum;
+import com.team8.project2.domain.member.event.ProfileImageUpdateEvent;
 import com.team8.project2.domain.member.repository.FollowRepository;
 import com.team8.project2.domain.member.repository.MemberRepository;
 import com.team8.project2.domain.member.dto.FollowResDto;
@@ -37,6 +42,8 @@ public class MemberService {
 	private final FollowRepository followRepository;
 	private final Rq rq;
 	private final CurationRepository curationRepository;
+	private final S3Uploader s3Uploader;
+	private final ApplicationEventPublisher eventPublisher;
 
 	public Member join(String memberId, String password, RoleEnum role, String email, String profileImage) {
 		return join(memberId, password, role, email, profileImage, null);
@@ -187,5 +194,16 @@ public class MemberService {
 
 		return new CuratorInfoDto(username, member.getProfileImage(), member.getIntroduce(), curationCount, isFollowed,
 			isLogin);
+	}
+
+	@Transactional
+	public void updateProfileImage(MultipartFile imageFile) throws IOException {
+		Member actor = rq.getActor();
+		String imageFileName = s3Uploader.uploadFile(imageFile);
+		String oldProfileImageUrl = actor.getProfileImage();
+		actor.setProfileImage(s3Uploader.getBaseUrl() + imageFileName);
+
+		memberRepository.save(actor);
+		eventPublisher.publishEvent(new ProfileImageUpdateEvent(oldProfileImageUrl));
 	}
 }

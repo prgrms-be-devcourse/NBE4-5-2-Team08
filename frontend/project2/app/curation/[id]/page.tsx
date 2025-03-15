@@ -62,6 +62,7 @@ export default function PostDetail() {
   const [linksMetaData, setLinksMetaData] = useState<Map<string, LinkMetaData>>(
     new Map()
   );
+  // 로딩 상태 분리 - 글 내용과 메타데이터 로딩을 별도로 관리
   const [contentLoading, setContentLoading] = useState(true); // 글 내용 로딩 상태
   const [metaDataLoading, setMetaDataLoading] = useState(false); // 메타데이터 로딩 상태
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +70,7 @@ export default function PostDetail() {
   const [showReportModal, setShowReportModal] = useState(false);
   const [failedUrls, setFailedUrls] = useState<Set<string>>(new Set());
 
-  // API 데이터 호출
+  // API 데이터 호출 함수 수정
   async function fetchData() {
     try {
       setContentLoading(true);
@@ -173,7 +174,7 @@ export default function PostDetail() {
     }
 
     fetchAllLinksMetaData();
-  }, [post?.urls]);
+  }, [post?.urls]); // linksMetaData 의존성 제거
 
   // 좋아요 토글 API 호출
   const toggleLike = async () => {

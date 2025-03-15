@@ -20,7 +20,7 @@ export default function FollowingPage() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const router = useRouter();
 
-  // 팔로잉 목록 가져오기
+  // 팔로잉 목록 ��져오기
   const fetchFollowingUsers = async () => {
     try {
       setLoading(true);

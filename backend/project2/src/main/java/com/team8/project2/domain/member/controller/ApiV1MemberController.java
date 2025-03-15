@@ -1,5 +1,7 @@
 package com.team8.project2.domain.member.controller;
 
+import java.io.IOException;
+
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -7,7 +9,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.team8.project2.domain.curation.curation.service.CurationService;
 import com.team8.project2.domain.member.dto.CuratorInfoDto;
@@ -177,4 +181,14 @@ public class ApiV1MemberController {
         return new RsData<>("200-1", "팔로우 중인 사용자를 조회했습니다.", followingResDto);
     }
 
+    @PostMapping("/profile/images/upload")
+    @PreAuthorize("isAuthenticated()")
+    public RsData<Void> updateProfileImage(@RequestParam("file") MultipartFile file) {
+        try {
+            memberService.updateProfileImage(file);
+        } catch (IOException e) {
+            return new RsData<>("500-1", "프로필 이미지 업로드에 실패했습니다.");
+		}
+		return new RsData<>("200-1", "프로필 이미지가 변경되었습니다.");
+    }
 }
