@@ -108,7 +108,7 @@ public class BaseInitData {
 		};
 
 		// 10개의 큐레이션 생성
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 50; i++) {
 			Member member = members.get(i % members.size()); // 사용자 순환
 
 			// 큐레이션 생성

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { Heart, MessageSquare, Bookmark, Flag } from "lucide-react";
 import { stripHtml } from "@/lib/htmlutils";
@@ -37,6 +37,8 @@ interface CurationRequestParams {
   title?: string;
   content?: string;
   order?: SortOrder;
+  page?: number;
+  size?: number;
 }
 
 type SortOrder = "LATEST" | "LIKECOUNT";
@@ -59,12 +61,29 @@ export default function PostList() {
   );
   const [failedUrls, setFailedUrls] = useState<Set<string>>(new Set());
 
+  // 페이징을 위한 상태 추가
+  const [page, setPage] = useState<number>(0);
+  const [hasMore, setHasMore] = useState<boolean>(true);
+  const [loadingMore, setLoadingMore] = useState<boolean>(false);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
   // API 요청 함수
-  const fetchCurations = async (params: CurationRequestParams) => {
-    setLoading(true);
+  const fetchCurations = async (
+    params: CurationRequestParams,
+    isLoadMore = false
+  ) => {
+    if (isLoadMore) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+    }
+
     try {
       const queryParams = new URLSearchParams({
-        order: sortOrder, // 기존의 sortOrder 상태를 직접 전달
+        order: sortOrder,
+        page: params.page !== undefined ? params.page.toString() : "0",
+        size: params.size !== undefined ? params.size.toString() : "20",
         ...(params.tags && params.tags.length > 0
           ? { tags: params.tags.join(",") }
           : {}),
@@ -76,16 +95,35 @@ export default function PostList() {
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
+
       const data = await response.json();
       if (data && data.data) {
-        setCurations(data.data);
+        // 새로운 데이터가 있는지 확인
+        const newCurations = data.data;
+
+        // 요청한 사이즈보다 적은 데이터가 왔다면 더 이상 데이터가 없는 것
+        setHasMore(newCurations.length === (params.size || 20));
+
+        if (isLoadMore) {
+          // 기존 데이터에 새 데이터 추가
+          setCurations((prev) => [...prev, ...newCurations]);
+        } else {
+          // 새로운 필터링 등의 경우 데이터 교체
+          setCurations(newCurations);
+        }
       } else {
         console.error("No data found in the response");
+        setHasMore(false);
       }
     } catch (error) {
       console.error("Error fetching curations:", error);
+      setHasMore(false);
     } finally {
-      setLoading(false);
+      if (isLoadMore) {
+        setLoadingMore(false);
+      } else {
+        setLoading(false);
+      }
     }
   };
 
@@ -98,16 +136,42 @@ export default function PostList() {
     setFilterModalOpen(false);
   };
 
-  // 필터링 조건을 기반으로 API 호출
-  const applyFilter = () => {
-    setSelectedTags(tags); // 입력한 tags를 selectedTags에 동기화
+  // 더 많은 데이터 로드
+  const loadMore = () => {
+    if (loadingMore || !hasMore) return;
+
+    const nextPage = page + 1;
+    setPage(nextPage);
 
     const params: CurationRequestParams = {
       tags: selectedTags,
       title,
       content,
-      order: sortOrder, // 정렬 기준도 함께 보내기
+      order: sortOrder,
+      page: nextPage,
+      size: 20,
     };
+
+    fetchCurations(params, true);
+  };
+
+  // 필터링 조건을 기반으로 API 호출
+  const applyFilter = () => {
+    setSelectedTags(tags); // 입력한 tags를 selectedTags에 동기화
+
+    // 필터 적용 시 페이지 초기화
+    setPage(0);
+    setHasMore(true);
+
+    const params: CurationRequestParams = {
+      tags: selectedTags,
+      title,
+      content,
+      order: sortOrder,
+      page: 0,
+      size: 20,
+    };
+
     fetchCurations(params);
     closeFilterModal();
   };
@@ -159,14 +223,21 @@ export default function PostList() {
   };
 
   useEffect(() => {
+    // 페이지 초기화
+    setPage(0);
+    setHasMore(true);
+
     const params: CurationRequestParams = {
       tags: selectedTags,
       title,
       content,
-      order: sortOrder, // 정렬 기준도 함께 보내기
+      order: sortOrder,
+      page: 0,
+      size: 20,
     };
+
     fetchCurations(params);
-  }, [selectedTags]);
+  }, [selectedTags, sortOrder]);
 
   const toggleTagFilter = (tag: string) => {
     setSelectedTags((prev) => {
@@ -178,7 +249,13 @@ export default function PostList() {
   };
 
   useEffect(() => {
-    fetchCurations({}); // 페이지 로딩 시 한번 API 호출
+    // 페이지 로딩 시 한번 API 호출
+    const params: CurationRequestParams = {
+      page: 0,
+      size: 20,
+    };
+
+    fetchCurations(params);
 
     // 사이드바에서 태그 선택 이벤트 리스너 추가
     const handleSelectTag = (event: CustomEvent) => {
@@ -216,6 +293,37 @@ export default function PostList() {
       console.error("Error checking like status:", error);
     }
   };
+
+  // 무한 스크롤을 위한 Intersection Observer 설정
+  useEffect(() => {
+    // 이전 observer 정리
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+
+    // 새 observer 생성
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && hasMore && !loadingMore) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    // 관찰할 요소 설정
+    if (loadMoreRef.current) {
+      observerRef.current.observe(loadMoreRef.current);
+    }
+
+    // 컴포넌트 언마운트 시 observer 정리
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [hasMore, loadingMore, page, selectedTags, title, content, sortOrder]);
 
   return (
     <>
@@ -320,113 +428,125 @@ export default function PostList() {
           {curations.length === 0 ? (
             <p>글이 없습니다.</p>
           ) : (
-            curations.map((curation) => (
-              <div key={curation.id} className="space-y-4 border-b pb-6">
-                <div className="flex items-center space-x-2">
-                  <p className="text-xs text-gray-500">{`작성된 날짜 : ${formatDate(
-                    curation.createdAt
-                  )}`}</p>
-                  <p className="text-xs text-gray-500">
-                    조회수 {curation.viewCount}
-                  </p>
-                </div>
+            <>
+              {curations.map((curation) => (
+                <div key={curation.id} className="space-y-4 border-b pb-6">
+                  <div className="flex items-center space-x-2">
+                    <p className="text-xs text-gray-500">{`작성된 날짜 : ${formatDate(
+                      curation.createdAt
+                    )}`}</p>
+                    <p className="text-xs text-gray-500">
+                      조회수 {curation.viewCount}
+                    </p>
+                  </div>
 
-                <div>
-                  <Link href={`/curation/${curation.id}`} className="group">
-                    <h2 className="text-xl font-bold group-hover:text-blue-600">
-                      {curation.title}
-                    </h2>
-                  </Link>
-                  {/* Replace the content rendering in the curations.map section with: */}
-                  <p className="mt-2 text-gray-600">
-                    {curation.content ? stripHtml(curation.content, 100) : ""}
-                  </p>
-                  <button className="mt-2 text-sm font-medium text-blue-600">
-                    더보기
-                  </button>
-                </div>
+                  <div>
+                    <Link href={`/curation/${curation.id}`} className="group">
+                      <h2 className="text-xl font-bold group-hover:text-blue-600">
+                        {curation.title}
+                      </h2>
+                    </Link>
+                    {/* Replace the content rendering in the curations.map section with: */}
+                    <p className="mt-2 text-gray-600">
+                      {curation.content ? stripHtml(curation.content, 100) : ""}
+                    </p>
+                    <button className="mt-2 text-sm font-medium text-blue-600">
+                      더보기
+                    </button>
+                  </div>
 
-                {/* 태그 표시 */}
-                <div className="flex space-x-2 mt-2">
-                  {curation.tags.map((tag) => (
-                    <span
-                      key={tag.name}
-                      className={`px-3 py-1 text-sm font-medium rounded-full cursor-pointer ${
-                        selectedTags.includes(tag.name)
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-200 text-gray-600"
-                      }`}
-                      onClick={() => toggleTagFilter(tag.name)}
+                  {/* 태그 표시 */}
+                  <div className="flex space-x-2 mt-2">
+                    {curation.tags.map((tag) => (
+                      <span
+                        key={tag.name}
+                        className={`px-3 py-1 text-sm font-medium rounded-full cursor-pointer ${
+                          selectedTags.includes(tag.name)
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-200 text-gray-600"
+                        }`}
+                        onClick={() => toggleTagFilter(tag.name)}
+                      >
+                        {tag.name}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* 메타 데이터 카드 */}
+                  {curation.urls.map((urlObj, index) => (
+                    <Link
+                      key={`${urlObj.url}-${index}`}
+                      href={urlObj.url}
+                      passHref
+                      target="_blank"
+                      rel="noopener noreferrer"
                     >
-                      {tag.name}
-                    </span>
-                  ))}
-                </div>
-
-                {/* 메타 데이터 카드 */}
-                {curation.urls.map((urlObj, index) => (
-                  <Link
-                    key={`${urlObj.url}-${index}`}
-                    href={urlObj.url}
-                    passHref
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <div className="mt-4 rounded-lg border p-4 cursor-pointer hover:bg-gray-50 transition-colors">
-                      <div className="flex items-center space-x-3">
-                        <img
-                          src={
-                            urlObj.imageUrl ||
-                            "/placeholder.svg?height=48&width=48"
-                          }
-                          alt="Preview"
-                          className="h-12 w-12 rounded-lg object-cover"
-                        />
-                        <div>
-                          <h3 className="font-medium">
-                            {urlObj.title || "링크"}
-                          </h3>
-                          <p className="text-sm text-gray-600 line-clamp-1">
-                            {urlObj.description || urlObj.url}
-                          </p>
+                      <div className="mt-4 rounded-lg border p-4 cursor-pointer hover:bg-gray-50 transition-colors">
+                        <div className="flex items-center space-x-3">
+                          <img
+                            src={
+                              urlObj.imageUrl ||
+                              "/placeholder.svg?height=48&width=48"
+                            }
+                            alt="Preview"
+                            className="h-12 w-12 rounded-lg object-cover"
+                          />
+                          <div>
+                            <h3 className="font-medium">
+                              {urlObj.title || "링크"}
+                            </h3>
+                            <p className="text-sm text-gray-600 line-clamp-1">
+                              {urlObj.description || urlObj.url}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </Link>
-                ))}
+                    </Link>
+                  ))}
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <button
-                      className="flex items-center space-x-1 text-sm text-gray-500"
-                      onClick={() => toggleLike(curation.id)}
-                    >
-                      <Heart
-                        className={`w-6 h-6 ${
-                          likedCurations[curation.id]
-                            ? "text-red-500 fill-red-500"
-                            : "text-gray-500"
-                        }`}
-                      />
-                      <span>{curation.likeCount}</span>
-                    </button>
-                    <button className="flex items-center space-x-1 text-sm text-gray-500">
-                      <MessageSquare className="h-4 w-4" />
-                      <span>{curation.commentCount}</span>
-                    </button>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button>
-                      <Bookmark className="h-4 w-4 text-gray-500" />
-                    </button>
-                    <ShareButton id={curation.id} variant="icon" />
-                    <button onClick={() => openReportModal(curation.id)}>
-                      <Flag className="h-4 w-4 text-gray-500 hover:text-red-500" />
-                    </button>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <button
+                        className="flex items-center space-x-1 text-sm text-gray-500"
+                        onClick={() => toggleLike(curation.id)}
+                      >
+                        <Heart
+                          className={`w-6 h-6 ${
+                            likedCurations[curation.id]
+                              ? "text-red-500 fill-red-500"
+                              : "text-gray-500"
+                          }`}
+                        />
+                        <span>{curation.likeCount}</span>
+                      </button>
+                      <button className="flex items-center space-x-1 text-sm text-gray-500">
+                        <MessageSquare className="h-4 w-4" />
+                        <span>{curation.commentCount}</span>
+                      </button>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button>
+                        <Bookmark className="h-4 w-4 text-gray-500" />
+                      </button>
+                      <ShareButton id={curation.id} variant="icon" />
+                      <button onClick={() => openReportModal(curation.id)}>
+                        <Flag className="h-4 w-4 text-gray-500 hover:text-red-500" />
+                      </button>
+                    </div>
                   </div>
                 </div>
+              ))}
+
+              {/* 무한 스크롤을 위한 로딩 표시기 */}
+              <div ref={loadMoreRef} className="py-4 flex justify-center">
+                {loadingMore && <ClipLoader size={30} color="#3498db" />}
+                {!hasMore && curations.length > 0 && (
+                  <p className="text-gray-500 text-sm">
+                    더 이상 글이 없습니다.
+                  </p>
+                )}
               </div>
-            ))
+            </>
           )}
         </div>
       )}

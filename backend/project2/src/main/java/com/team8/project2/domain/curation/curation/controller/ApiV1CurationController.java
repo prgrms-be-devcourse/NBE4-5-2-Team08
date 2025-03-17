@@ -20,6 +20,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -123,9 +127,11 @@ public class ApiV1CurationController {
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String content,
             @RequestParam(required = false) String author,
-            @RequestParam(required = false, defaultValue = "LATEST") SearchOrder order
+            @RequestParam(required = false, defaultValue = "LATEST") SearchOrder order,
+            @RequestParam(defaultValue = "0") int page,  // 기본값 0
+            @RequestParam(defaultValue = "20") int size // 기본값 20
     ) {
-        List<CurationResDto> result = curationService.searchCurations(tags, title, content, author, order)
+        List<CurationResDto> result = curationService.searchCurations(tags, title, content, author, order, page, size)
                 .stream()
                 .map(CurationResDto::new)
                 .collect(Collectors.toUnmodifiableList());

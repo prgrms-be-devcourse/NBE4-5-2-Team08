@@ -1,7 +1,5 @@
 "use client";
 
-import type React from "react";
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
@@ -15,7 +13,6 @@ import {
   ChevronDown,
   ChevronRight,
   BookOpen,
-  Edit,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -26,22 +23,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import type { PlaylistItem } from "@/types/playlist";
 import {
   deletePlaylistItem,
   updatePlaylistItemOrder,
-  updatePlaylistItem,
 } from "@/lib/playlist-service";
 import AddLinkButton from "./add-link-button";
 import { useToast } from "@/components/ui/use-toast";
@@ -57,7 +42,7 @@ interface PlaylistItemsProps {
 interface DraggableItem {
   id: string; // 드래그 앤 드롭을 위한 고유 ID
   type: "group" | "single"; // 그룹인지 개별 링크인지 구분
-  groupKey?: string; // 그룹인 경�� 그룹 키
+  groupKey?: string; // 그룹인 경우 그룹 키
   item: PlaylistItem; // 실제 아이템 데이터
   displayOrder?: number; // 정렬을 위한 표시 순서 (추가)
 }
@@ -85,32 +70,12 @@ export default function PlaylistItems({
   const [singleItems, setSingleItems] = useState<PlaylistItem[]>([]);
   const [draggableItems, setDraggableItems] = useState<DraggableItem[]>([]);
 
-  // 편집 관련 상태 추가
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<PlaylistItem | null>(null);
-  const [editFormData, setEditFormData] = useState({
-    title: "",
-    url: "",
-    description: "",
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   // 새 링크가 추가되었을 때 호출되는 함수
   const handleLinkAdded = (newItem: PlaylistItem) => {
     setItems((prevItems) => [...prevItems, newItem]);
   };
 
   const handleDelete = async (itemId: number) => {
-    // 로그인 상태 확인
-    if (sessionStorage.getItem("isLoggedIn") !== "true") {
-      toast({
-        title: "로그인이 필요합니다",
-        description: "플레이리스트를 수정하려면 로그인해주세요.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (window.confirm("이 링크를 플레이리스트에서 삭제하시겠습니까?")) {
       try {
         await deletePlaylistItem(playlistId, itemId);
@@ -119,86 +84,6 @@ export default function PlaylistItems({
       } catch (error) {
         console.error("Failed to delete link:", error);
       }
-    }
-  };
-
-  // 편집 모달 열기 함수
-  const handleEditStart = (item: PlaylistItem) => {
-    setEditingItem(item);
-    setEditFormData({
-      title: item.title || "",
-      url: item.url || "",
-      description: item.description || "",
-    });
-    setEditModalOpen(true);
-  };
-
-  // 편집 폼 입력 변경 핸들러
-  const handleEditFormChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setEditFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  // 편집 저장 함수
-  const handleEditSave = async () => {
-    if (!editingItem) return;
-
-    // 로그인 상태 확인
-    if (sessionStorage.getItem("isLoggedIn") !== "true") {
-      toast({
-        title: "로그인이 필요합니다",
-        description: "플레이리스트를 수정하려면 로그인해주세요.",
-        variant: "destructive",
-      });
-      setEditModalOpen(false);
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      // 백엔드 API 호출
-      await updatePlaylistItem(playlistId, editingItem.id, {
-        title: editFormData.title,
-        url: editFormData.url,
-        description: editFormData.description,
-      });
-
-      // 로컬 상태 업데이트
-      setItems((prevItems) =>
-        prevItems.map((item) =>
-          item.id === editingItem.id
-            ? {
-                ...item,
-                title: editFormData.title,
-                url: editFormData.url,
-                description: editFormData.description,
-              }
-            : item
-        )
-      );
-
-      // 성공 메시지
-      toast({
-        title: "링크 수정 완료",
-        description: "링크 정보가 성공적으로 수정되었습니다.",
-      });
-
-      // 모달 닫기
-      setEditModalOpen(false);
-    } catch (error) {
-      console.error("링크 수정 오류:", error);
-      toast({
-        title: "링크 수정 실패",
-        description: "링크 정보 수정 중 오류가 발생했습니다.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -412,7 +297,7 @@ export default function PlaylistItems({
     return <LinkIcon className="h-4 w-4" />;
   };
 
-  // 큐레이션 그룹 토글 함수
+  // 큐레이션 ��룹 토글 함수
   const toggleGroup = (groupId: string) => {
     setExpandedGroups((prev) => ({
       ...prev,
@@ -544,7 +429,6 @@ export default function PlaylistItems({
     setDraggableItems(newDraggableItems);
   }, [items]);
 
-  // DragDropContext 부분을 수정하여 소유자인 경우에만 드래그 앤 드롭 기능 활성화
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center mb-4">
@@ -557,310 +441,33 @@ export default function PlaylistItems({
         )}
       </div>
 
-      {isOwner ? (
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <Droppable droppableId="main-list" type="MAIN_LIST">
-            {(provided) => (
-              <div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                className="space-y-2"
-              >
-                {draggableItems.map((draggableItem, index) => {
-                  if (draggableItem.type === "group") {
-                    const groupKey = draggableItem.groupKey!;
-                    const group = curationGroups[groupKey];
-                    const isExpanded = expandedGroups[groupKey] || false;
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable droppableId="main-list" type="MAIN_LIST">
+          {(provided) => (
+            <div
+              {...provided.droppableProps}
+              ref={provided.innerRef}
+              className="space-y-2"
+            >
+              {draggableItems.map((draggableItem, index) => {
+                if (draggableItem.type === "group") {
+                  const groupKey = draggableItem.groupKey!;
+                  const group = curationGroups[groupKey];
+                  const isExpanded = expandedGroups[groupKey] || false;
 
-                    return (
-                      <Draggable
-                        key={draggableItem.id}
-                        draggableId={draggableItem.id}
-                        index={index}
-                      >
-                        {(provided) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            className="mb-4"
-                          >
-                            <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-md border border-blue-200 hover:bg-blue-100 group">
-                              <div
-                                {...provided.dragHandleProps}
-                                className="cursor-grab text-muted-foreground"
-                              >
-                                <GripVertical className="h-5 w-5" />
-                              </div>
-
-                              <button
-                                onClick={() => toggleGroup(groupKey)}
-                                className="p-1 rounded-full hover:bg-blue-200"
-                              >
-                                {isExpanded ? (
-                                  <ChevronDown className="h-4 w-4" />
-                                ) : (
-                                  <ChevronRight className="h-4 w-4" />
-                                )}
-                              </button>
-
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <Badge
-                                    variant="outline"
-                                    className="flex items-center gap-1 bg-white"
-                                  >
-                                    <BookOpen className="h-4 w-4" />
-                                  </Badge>
-                                  <h3 className="font-medium line-clamp-1">
-                                    {group.header.title}
-                                  </h3>
-                                  <Badge variant="outline" className="ml-2">
-                                    {group.links.length} 링크
-                                  </Badge>
-                                </div>
-
-                                {group.header.description && (
-                                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                                    {group.header.description}
-                                  </p>
-                                )}
-
-                                <div className="overflow-x-auto">
-                                  <a
-                                    href={group.header.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-sm text-gray-500 underline hover:text-gray-700 flex items-center gap-1"
-                                  >
-                                    <ExternalLink className="h-3 w-3" />
-                                    <span className="truncate max-w-[300px]">
-                                      큐레이션 보기
-                                    </span>
-                                  </a>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="flex"
-                                  asChild
-                                >
-                                  <a
-                                    href={group.header.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    방문하기
-                                  </a>
-                                </Button>
-
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8"
-                                    >
-                                      <MoreVertical className="h-4 w-4" />
-                                      <span className="sr-only">메뉴</span>
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem asChild>
-                                      <a
-                                        href={group.header.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                      >
-                                        새 탭에서 열기
-                                      </a>
-                                    </DropdownMenuItem>
-                                    {isOwner && (
-                                      <>
-                                        <DropdownMenuItem
-                                          onClick={() =>
-                                            handleEditStart(group.header)
-                                          }
-                                        >
-                                          <Edit className="mr-2 h-4 w-4" />
-                                          편집하기
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                          className="text-destructive focus:text-destructive"
-                                          onClick={() =>
-                                            handleDelete(group.header.id)
-                                          }
-                                        >
-                                          <Trash2 className="mr-2 h-4 w-4" />
-                                          삭제하기
-                                        </DropdownMenuItem>
-                                      </>
-                                    )}
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </div>
-                            </div>
-
-                            {isExpanded && group.links.length > 0 && (
-                              <Droppable
-                                droppableId={`group-${groupKey}`}
-                                type={`GROUP_${groupKey}`}
-                              >
-                                {(provided) => (
-                                  <div
-                                    ref={provided.innerRef}
-                                    {...provided.droppableProps}
-                                    className="pl-8 mt-2 space-y-2"
-                                  >
-                                    {group.links.map((item, itemIndex) => (
-                                      <Draggable
-                                        key={`group-item-${item.id}`}
-                                        draggableId={`group-item-${item.id}`}
-                                        index={itemIndex}
-                                      >
-                                        {(provided) => (
-                                          <div
-                                            ref={provided.innerRef}
-                                            {...provided.draggableProps}
-                                            className="flex items-center gap-3 p-4 bg-card rounded-md border hover:bg-accent/50 group ml-4"
-                                          >
-                                            <div
-                                              {...provided.dragHandleProps}
-                                              className="cursor-grab text-muted-foreground"
-                                            >
-                                              <GripVertical className="h-5 w-5" />
-                                            </div>
-
-                                            <div className="flex-1 min-w-0">
-                                              <div className="flex items-center gap-2">
-                                                <Badge
-                                                  variant="outline"
-                                                  className="flex items-center gap-1"
-                                                >
-                                                  {getLinkTypeIcon(item.url)}
-                                                </Badge>
-                                                <h3 className="font-medium line-clamp-1">
-                                                  {item.title}
-                                                </h3>
-                                              </div>
-
-                                              {item.description && (
-                                                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                                                  {item.description.replace(
-                                                    /\s*\[큐레이션ID:\d+\]\s*/g,
-                                                    ""
-                                                  )}
-                                                </p>
-                                              )}
-
-                                              <div className="overflow-x-auto">
-                                                <a
-                                                  href={item.url}
-                                                  target="_blank"
-                                                  rel="noopener noreferrer"
-                                                  className="text-sm text-gray-500 underline hover:text-gray-700 flex items-center gap-1"
-                                                >
-                                                  <ExternalLink className="h-3 w-3" />
-                                                  <span className="truncate max-w-[300px]">
-                                                    {item.url}
-                                                  </span>
-                                                </a>
-                                              </div>
-                                            </div>
-
-                                            <div className="flex items-center gap-2">
-                                              <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="flex"
-                                                asChild
-                                              >
-                                                <a
-                                                  href={item.url}
-                                                  target="_blank"
-                                                  rel="noopener noreferrer"
-                                                >
-                                                  방문하기
-                                                </a>
-                                              </Button>
-
-                                              <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                  <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-8 w-8"
-                                                  >
-                                                    <MoreVertical className="h-4 w-4" />
-                                                    <span className="sr-only">
-                                                      메뉴
-                                                    </span>
-                                                  </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                  <DropdownMenuItem asChild>
-                                                    <a
-                                                      href={item.url}
-                                                      target="_blank"
-                                                      rel="noopener noreferrer"
-                                                    >
-                                                      새 탭에서 열기
-                                                    </a>
-                                                  </DropdownMenuItem>
-                                                  {isOwner && (
-                                                    <>
-                                                      <DropdownMenuItem
-                                                        onClick={() =>
-                                                          handleEditStart(item)
-                                                        }
-                                                      >
-                                                        <Edit className="mr-2 h-4 w-4" />
-                                                        편집하기
-                                                      </DropdownMenuItem>
-                                                      <DropdownMenuItem
-                                                        className="text-destructive focus:text-destructive"
-                                                        onClick={() =>
-                                                          handleDelete(item.id)
-                                                        }
-                                                      >
-                                                        <Trash2 className="mr-2 h-4 w-4" />
-                                                        삭제하기
-                                                      </DropdownMenuItem>
-                                                    </>
-                                                  )}
-                                                </DropdownMenuContent>
-                                              </DropdownMenu>
-                                            </div>
-                                          </div>
-                                        )}
-                                      </Draggable>
-                                    ))}
-                                    {provided.placeholder}
-                                  </div>
-                                )}
-                              </Droppable>
-                            )}
-                          </div>
-                        )}
-                      </Draggable>
-                    );
-                  } else {
-                    // 개별 링크 렌더링
-                    const item = draggableItem.item;
-                    return (
-                      <Draggable
-                        key={draggableItem.id}
-                        draggableId={draggableItem.id}
-                        index={index}
-                      >
-                        {(provided) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            className="flex items-center gap-3 p-4 bg-card rounded-md border hover:bg-accent/50 group"
-                          >
+                  return (
+                    <Draggable
+                      key={draggableItem.id}
+                      draggableId={draggableItem.id}
+                      index={index}
+                    >
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          className="mb-4"
+                        >
+                          <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-md border border-blue-200 hover:bg-blue-100 group">
                             <div
                               {...provided.dragHandleProps}
                               className="cursor-grab text-muted-foreground"
@@ -868,35 +475,49 @@ export default function PlaylistItems({
                               <GripVertical className="h-5 w-5" />
                             </div>
 
+                            <button
+                              onClick={() => toggleGroup(groupKey)}
+                              className="p-1 rounded-full hover:bg-blue-200"
+                            >
+                              {isExpanded ? (
+                                <ChevronDown className="h-4 w-4" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4" />
+                              )}
+                            </button>
+
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <Badge
                                   variant="outline"
-                                  className="flex items-center gap-1"
+                                  className="flex items-center gap-1 bg-white"
                                 >
-                                  {getLinkTypeIcon(item.url)}
+                                  <BookOpen className="h-4 w-4" />
                                 </Badge>
                                 <h3 className="font-medium line-clamp-1">
-                                  {item.title}
+                                  {group.header.title}
                                 </h3>
+                                <Badge variant="outline" className="ml-2">
+                                  {group.links.length} 링크
+                                </Badge>
                               </div>
 
-                              {item.description && (
+                              {group.header.description && (
                                 <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                                  {item.description}
+                                  {group.header.description}
                                 </p>
                               )}
 
                               <div className="overflow-x-auto">
                                 <a
-                                  href={item.url}
+                                  href={group.header.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-sm text-gray-500 underline hover:text-gray-700 flex items-center gap-1"
                                 >
                                   <ExternalLink className="h-3 w-3" />
                                   <span className="truncate max-w-[300px]">
-                                    {item.url}
+                                    큐레이션 보기
                                   </span>
                                 </a>
                               </div>
@@ -910,7 +531,7 @@ export default function PlaylistItems({
                                 asChild
                               >
                                 <a
-                                  href={item.url}
+                                  href={group.header.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                 >
@@ -932,7 +553,7 @@ export default function PlaylistItems({
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem asChild>
                                     <a
-                                      href={item.url}
+                                      href={group.header.url}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                     >
@@ -940,145 +561,176 @@ export default function PlaylistItems({
                                     </a>
                                   </DropdownMenuItem>
                                   {isOwner && (
-                                    <>
-                                      <DropdownMenuItem
-                                        onClick={() => handleEditStart(item)}
-                                      >
-                                        <Edit className="mr-2 h-4 w-4" />
-                                        편집하기
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem
-                                        className="text-destructive focus:text-destructive"
-                                        onClick={() => handleDelete(item.id)}
-                                      >
-                                        <Trash2 className="mr-2 h-4 w-4" />
-                                        삭제하기
-                                      </DropdownMenuItem>
-                                    </>
+                                    <DropdownMenuItem
+                                      className="text-destructive focus:text-destructive"
+                                      onClick={() =>
+                                        handleDelete(group.header.id)
+                                      }
+                                    >
+                                      <Trash2 className="mr-2 h-4 w-4" />
+                                      삭제하기
+                                    </DropdownMenuItem>
                                   )}
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </div>
                           </div>
-                        )}
-                      </Draggable>
-                    );
-                  }
-                })}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
-      ) : (
-        // 소유자가 아닌 경우 드래그 앤 드롭 없이 읽기 전용 뷰 제공
-        <div className="space-y-2">
-          {draggableItems.map((draggableItem) => {
-            if (draggableItem.type === "group") {
-              const groupKey = draggableItem.groupKey!;
-              const group = curationGroups[groupKey];
-              const isExpanded = expandedGroups[groupKey] || false;
 
-              return (
-                <div key={draggableItem.id} className="mb-4">
-                  <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-md border border-blue-200">
-                    <button
-                      onClick={() => toggleGroup(groupKey)}
-                      className="p-1 rounded-full hover:bg-blue-200"
-                    >
-                      {isExpanded ? (
-                        <ChevronDown className="h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4" />
-                      )}
-                    </button>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          variant="outline"
-                          className="flex items-center gap-1 bg-white"
-                        >
-                          <BookOpen className="h-4 w-4" />
-                        </Badge>
-                        <h3 className="font-medium line-clamp-1">
-                          {group.header.title}
-                        </h3>
-                        <Badge variant="outline" className="ml-2">
-                          {group.links.length} 링크
-                        </Badge>
-                      </div>
-
-                      {group.header.description && (
-                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                          {group.header.description}
-                        </p>
-                      )}
-
-                      <div className="overflow-x-auto">
-                        <a
-                          href={group.header.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-gray-500 underline hover:text-gray-700 flex items-center gap-1"
-                        >
-                          <ExternalLink className="h-3 w-3" />
-                          <span className="truncate max-w-[300px]">
-                            큐레이션 보기
-                          </span>
-                        </a>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="flex"
-                        asChild
-                      >
-                        <a
-                          href={group.header.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          방문하기
-                        </a>
-                      </Button>
-
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                            <span className="sr-only">메뉴</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <a
-                              href={group.header.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                          {isExpanded && group.links.length > 0 && (
+                            <Droppable
+                              droppableId={`group-${groupKey}`}
+                              type={`GROUP_${groupKey}`}
                             >
-                              새 탭에서 열기
-                            </a>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
+                              {(provided) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.droppableProps}
+                                  className="pl-8 mt-2 space-y-2"
+                                >
+                                  {group.links.map((item, itemIndex) => (
+                                    <Draggable
+                                      key={`group-item-${item.id}`}
+                                      draggableId={`group-item-${item.id}`}
+                                      index={itemIndex}
+                                    >
+                                      {(provided) => (
+                                        <div
+                                          ref={provided.innerRef}
+                                          {...provided.draggableProps}
+                                          className="flex items-center gap-3 p-4 bg-card rounded-md border hover:bg-accent/50 group ml-4"
+                                        >
+                                          <div
+                                            {...provided.dragHandleProps}
+                                            className="cursor-grab text-muted-foreground"
+                                          >
+                                            <GripVertical className="h-5 w-5" />
+                                          </div>
 
-                  {isExpanded && group.links.length > 0 && (
-                    <div className="pl-8 mt-2 space-y-2">
-                      {group.links.map((item) => (
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2">
+                                              <Badge
+                                                variant="outline"
+                                                className="flex items-center gap-1"
+                                              >
+                                                {getLinkTypeIcon(item.url)}
+                                              </Badge>
+                                              <h3 className="font-medium line-clamp-1">
+                                                {item.title}
+                                              </h3>
+                                            </div>
+
+                                            {item.description && (
+                                              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                                                {item.description.replace(
+                                                  /\s*\[큐레이션ID:\d+\]\s*/g,
+                                                  ""
+                                                )}
+                                              </p>
+                                            )}
+
+                                            <div className="overflow-x-auto">
+                                              <a
+                                                href={item.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-sm text-gray-500 underline hover:text-gray-700 flex items-center gap-1"
+                                              >
+                                                <ExternalLink className="h-3 w-3" />
+                                                <span className="truncate max-w-[300px]">
+                                                  {item.url}
+                                                </span>
+                                              </a>
+                                            </div>
+                                          </div>
+
+                                          <div className="flex items-center gap-2">
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              className="flex"
+                                              asChild
+                                            >
+                                              <a
+                                                href={item.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                              >
+                                                방문하기
+                                              </a>
+                                            </Button>
+
+                                            <DropdownMenu>
+                                              <DropdownMenuTrigger asChild>
+                                                <Button
+                                                  variant="ghost"
+                                                  size="icon"
+                                                  className="h-8 w-8"
+                                                >
+                                                  <MoreVertical className="h-4 w-4" />
+                                                  <span className="sr-only">
+                                                    메뉴
+                                                  </span>
+                                                </Button>
+                                              </DropdownMenuTrigger>
+                                              <DropdownMenuContent align="end">
+                                                <DropdownMenuItem asChild>
+                                                  <a
+                                                    href={item.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                  >
+                                                    새 탭에서 열기
+                                                  </a>
+                                                </DropdownMenuItem>
+                                                {isOwner && (
+                                                  <DropdownMenuItem
+                                                    className="text-destructive focus:text-destructive"
+                                                    onClick={() =>
+                                                      handleDelete(item.id)
+                                                    }
+                                                  >
+                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                    삭제하기
+                                                  </DropdownMenuItem>
+                                                )}
+                                              </DropdownMenuContent>
+                                            </DropdownMenu>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </Draggable>
+                                  ))}
+                                  {provided.placeholder}
+                                </div>
+                              )}
+                            </Droppable>
+                          )}
+                        </div>
+                      )}
+                    </Draggable>
+                  );
+                } else {
+                  // 개별 링크 렌더링
+                  const item = draggableItem.item;
+                  return (
+                    <Draggable
+                      key={draggableItem.id}
+                      draggableId={draggableItem.id}
+                      index={index}
+                    >
+                      {(provided) => (
                         <div
-                          key={`group-item-${item.id}`}
-                          className="flex items-center gap-3 p-4 bg-card rounded-md border ml-4"
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          className="flex items-center gap-3 p-4 bg-card rounded-md border hover:bg-accent/50 group"
                         >
+                          <div
+                            {...provided.dragHandleProps}
+                            className="cursor-grab text-muted-foreground"
+                          >
+                            <GripVertical className="h-5 w-5" />
+                          </div>
+
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <Badge
@@ -1094,10 +746,7 @@ export default function PlaylistItems({
 
                             {item.description && (
                               <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                                {item.description.replace(
-                                  /\s*\[큐레이션ID:\d+\]\s*/g,
-                                  ""
-                                )}
+                                {item.description}
                               </p>
                             )}
 
@@ -1153,154 +802,29 @@ export default function PlaylistItems({
                                     새 탭에서 열기
                                   </a>
                                 </DropdownMenuItem>
+                                {isOwner && (
+                                  <DropdownMenuItem
+                                    className="text-destructive focus:text-destructive"
+                                    onClick={() => handleDelete(item.id)}
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    삭제하기
+                                  </DropdownMenuItem>
+                                )}
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            } else {
-              // 개별 링크 렌더링 (읽기 전용)
-              const item = draggableItem.item;
-              return (
-                <div
-                  key={draggableItem.id}
-                  className="flex items-center gap-3 p-4 bg-card rounded-md border"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant="outline"
-                        className="flex items-center gap-1"
-                      >
-                        {getLinkTypeIcon(item.url)}
-                      </Badge>
-                      <h3 className="font-medium line-clamp-1">{item.title}</h3>
-                    </div>
-
-                    {item.description && (
-                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                        {item.description}
-                      </p>
-                    )}
-
-                    <div className="overflow-x-auto">
-                      <a
-                        href={item.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-gray-500 underline hover:text-gray-700 flex items-center gap-1"
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                        <span className="truncate max-w-[300px]">
-                          {item.url}
-                        </span>
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" className="flex" asChild>
-                      <a
-                        href={item.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        방문하기
-                      </a>
-                    </Button>
-
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
-                          <span className="sr-only">메뉴</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem asChild>
-                          <a
-                            href={item.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            새 탭에서 열기
-                          </a>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              );
-            }
-          })}
-        </div>
-      )}
-
-      {/* 링크 편집 모달 */}
-      <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>링크 정보 편집</DialogTitle>
-            <DialogDescription>
-              플레이리스트 링크의 정보를 수정합니다.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="edit-title">제목</Label>
-              <Input
-                id="edit-title"
-                name="title"
-                value={editFormData.title}
-                onChange={handleEditFormChange}
-                placeholder="링크 제목"
-              />
+                      )}
+                    </Draggable>
+                  );
+                }
+              })}
+              {provided.placeholder}
             </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="edit-url">URL</Label>
-              <Input
-                id="edit-url"
-                name="url"
-                type="url"
-                value={editFormData.url}
-                onChange={handleEditFormChange}
-                placeholder="https://example.com"
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="edit-description">설명</Label>
-              <Textarea
-                id="edit-description"
-                name="description"
-                value={editFormData.description}
-                onChange={handleEditFormChange}
-                placeholder="링크에 대한 설명"
-                rows={3}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setEditModalOpen(false)}
-              disabled={isSubmitting}
-            >
-              취소
-            </Button>
-            <Button onClick={handleEditSave} disabled={isSubmitting}>
-              {isSubmitting ? "저장 중..." : "저장하기"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          )}
+        </Droppable>
+      </DragDropContext>
     </div>
   );
 }

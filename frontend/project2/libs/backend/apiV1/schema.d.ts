@@ -777,10 +777,10 @@ export interface components {
             createdAt?: string;
             /** Format: date-time */
             modifiedAt?: string;
-            authorImgUrl?: string;
             authorName?: string;
             /** Format: int64 */
             authorId?: number;
+            authorImgUrl?: string;
         };
         Curation: {
             /** Format: int64 */
@@ -800,12 +800,12 @@ export interface components {
             tags?: components["schemas"]["CurationTag"][];
             comments?: components["schemas"]["Comment"][];
             memberName?: string;
-            memberImgUrl?: string;
-            /** Format: int32 */
-            commentCount?: number;
             /** Format: int64 */
             memberId?: number;
             imageNames?: string[];
+            memberImgUrl?: string;
+            /** Format: int32 */
+            commentCount?: number;
         };
         CurationLink: {
             id?: components["schemas"]["CurationLinkId"];
@@ -860,10 +860,10 @@ export interface components {
             profileImage?: string;
             email?: string;
             introduce?: string;
+            memberAuthoritesAsString?: string[];
             authorities?: components["schemas"]["GrantedAuthority"][];
             admin?: boolean;
             member?: boolean;
-            memberAuthoritesAsString?: string[];
         };
         ReplyComment: {
             /** Format: int64 */
@@ -876,8 +876,8 @@ export interface components {
             createdAt?: string;
             /** Format: date-time */
             modifiedAt?: string;
-            authorName?: string;
             authorProfileImageUrl?: string;
+            authorName?: string;
         };
         RsDataLink: {
             code?: string;
@@ -2275,6 +2275,8 @@ export interface operations {
                 content?: string;
                 author?: string;
                 order?: "LATEST" | "OLDEST" | "LIKECOUNT";
+                page?: number;
+                size?: number;
             };
             header?: never;
             path?: never;
