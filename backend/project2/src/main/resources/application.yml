@@ -7,15 +7,13 @@ spring:
   output:
     ansi:
       enables: always
-  datasource:
-    url: jdbc:mysql://localhost:3306/project1
-    username: dbuser
-    password: 1234
+
   jpa:
     open-in-view: false
     properties:
       hibernate:
         default_batch_fetch_size: 100
+
   data:
     redis:
       host: localhost
