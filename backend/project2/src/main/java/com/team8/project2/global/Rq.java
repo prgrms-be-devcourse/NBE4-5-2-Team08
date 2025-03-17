@@ -120,7 +120,7 @@ public class Rq {
         cookie.setDomain("localhost");
         cookie.setPath("/");
         cookie.setHttpOnly(true);
-        cookie.setSecure(false);
+        cookie.setSecure(true);
         cookie.setAttribute("SameSite", "Strict");
         response.addCookie(cookie);
     }
