@@ -54,7 +54,7 @@ async function addCurationToPlaylist(
 
   // 1. 큐레이션 헤더 추가 (그룹 헤더로 사용)
   const headerResponse = await fetch(
-    `http://localhost:8080/api/v1/playlists/${playlistId}/items/link`,
+    `http://52.78.27.224/api/v1/playlists/${playlistId}/items/link`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -85,7 +85,7 @@ async function addCurationToPlaylist(
     let linkData: LinkMetaData = {};
     try {
       const metaResponse = await fetch(
-        `http://localhost:8080/api/v1/link/preview`,
+        `http://52.78.27.224/api/v1/link/preview`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -110,7 +110,7 @@ async function addCurationToPlaylist(
     }
 
     const addLinkResponse = await fetch(
-      `http://localhost:8080/api/v1/playlists/${playlistId}/items/link`,
+      `http://52.78.27.224/api/v1/playlists/${playlistId}/items/link`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -161,7 +161,7 @@ export default function AddToPlaylistModal({
         setLoading(true);
         console.log("플레이리스트 목록 및 추가된 플레이리스트 확인 시작");
 
-        const res = await fetch("http://localhost:8080/api/v1/playlists", {
+        const res = await fetch("http://52.78.27.224/api/v1/playlists", {
           credentials: "include",
         });
 
@@ -192,7 +192,7 @@ export default function AddToPlaylistModal({
 
       // 큐레이션이 이미 추가된 플레이리스트 목록 가져오기
       const response = await fetch(
-        `http://localhost:8080/api/v1/curation/${curationId}/playlists`,
+        `http://52.78.27.224/api/v1/curation/${curationId}/playlists`,
         {
           credentials: "include",
         }
@@ -233,7 +233,7 @@ export default function AddToPlaylistModal({
 
       // 1. 큐레이션 데이터를 가져옵니다.
       const curationResponse = await fetch(
-        `http://localhost:8080/api/v1/curation/${curationId}`,
+        `http://52.78.27.224/api/v1/curation/${curationId}`,
         {
           credentials: "include",
         }
@@ -286,7 +286,7 @@ export default function AddToPlaylistModal({
       setIsSubmitting(true);
 
       // 1. 새 플레이리스트 생성
-      const createRes = await fetch("http://localhost:8080/api/v1/playlists", {
+      const createRes = await fetch("http://52.78.27.224/api/v1/playlists", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -302,7 +302,7 @@ export default function AddToPlaylistModal({
 
       // 2. 큐레이션 데이터를 가져옵니다.
       const curationResponse = await fetch(
-        `http://localhost:8080/api/v1/curation/${curationId}`,
+        `http://52.78.27.224/api/v1/curation/${curationId}`,
         {
           credentials: "include",
         }

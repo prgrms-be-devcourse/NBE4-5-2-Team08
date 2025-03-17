@@ -25,7 +25,7 @@ export default function FollowingPage() {
     try {
       setLoading(true);
       const response = await fetch(
-        "http://localhost:8080/api/v1/members/following",
+        "http://52.78.27.224/api/v1/members/following",
         {
           credentials: "include",
         }
@@ -63,7 +63,7 @@ export default function FollowingPage() {
   const handleUnfollow = async (username: string) => {
     try {
       const response = await fetch(
-        `http://localhost:8080/api/v1/members/${username}/unfollow`,
+        `http://52.78.27.224/api/v1/members/${username}/unfollow`,
         {
           method: "POST",
           credentials: "include",
@@ -91,7 +91,7 @@ export default function FollowingPage() {
   const handleFollow = async (username: string) => {
     try {
       const response = await fetch(
-        `http://localhost:8080/api/v1/members/${username}/follow`,
+        `http://52.78.27.224/api/v1/members/${username}/follow`,
         {
           method: "POST",
           credentials: "include",
@@ -136,12 +136,9 @@ export default function FollowingPage() {
   useEffect(() => {
     const checkLoginStatus = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:8080/api/v1/members/me",
-          {
-            credentials: "include",
-          }
-        );
+        const response = await fetch("http://52.78.27.224/api/v1/members/me", {
+          credentials: "include",
+        });
 
         if (response.ok) {
           setIsLoggedIn(true);

@@ -26,7 +26,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 
 // 백엔드 API URL
-const API_URL = "http://localhost:8080/api/v1";
+const API_URL = "http://52.78.27.224/api/v1";
 
 // 멤버 타입 정의
 interface Member {

@@ -39,7 +39,7 @@ export default function PlaylistGrid() {
     async function fetchPlaylists() {
       try {
         setIsLoading(true);
-        const res = await fetch("http://localhost:8080/api/v1/playlists", {
+        const res = await fetch("http://52.78.27.224/api/v1/playlists", {
           cache: "no-store",
           credentials: "include",
           headers: {
@@ -65,7 +65,7 @@ export default function PlaylistGrid() {
   // handleDelete 함수를 수정하여 삭제 성공 후 플레이리스트 목록 페이지로 리다이렉트합니다
   const handleDelete = async (playlistId: number) => {
     const res = await fetch(
-      `http://localhost:8080/api/v1/playlists/${playlistId}`,
+      `http://52.78.27.224/api/v1/playlists/${playlistId}`,
       {
         method: "DELETE",
         credentials: "include",

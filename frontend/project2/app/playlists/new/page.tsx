@@ -33,7 +33,7 @@ export default function NewPlaylistPage() {
       try {
         // 1. 큐레이션 데이터를 가져옵니다
         const curationResponse = await fetch(
-          `http://localhost:8080/api/v1/curation/${curationToAdd}`,
+          `http://52.78.27.224/api/v1/curation/${curationToAdd}`,
           {
             credentials: "include",
           }
@@ -71,7 +71,7 @@ export default function NewPlaylistPage() {
 
         // 3. 큐레이션 정보를 플레이리스트에 추가합니다 (그룹 헤더로 사용)
         const headerResponse = await fetch(
-          `http://localhost:8080/api/v1/playlists/${playlistId}/items/link`,
+          `http://52.78.27.224/api/v1/playlists/${playlistId}/items/link`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -109,7 +109,7 @@ export default function NewPlaylistPage() {
 
             // 각 URL에 대한 메타데이터 가져오기
             const metaResponse = await fetch(
-              `http://localhost:8080/api/v1/link/preview`,
+              `http://52.78.27.224/api/v1/link/preview`,
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -133,7 +133,7 @@ export default function NewPlaylistPage() {
 
             // 링크 추가
             const addLinkResponse = await fetch(
-              `http://localhost:8080/api/v1/playlists/${playlistId}/items/link`,
+              `http://52.78.27.224/api/v1/playlists/${playlistId}/items/link`,
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

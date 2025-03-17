@@ -83,7 +83,7 @@ const QuillEditor = forwardRef<QuillEditorRef, QuillEditorProps>(
 
                 // 서버에 이미지 업로드 요청
                 const apiUrl =
-                  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+                  process.env.NEXT_PUBLIC_API_URL || "http://52.78.27.224";
                 const response = await fetch(`${apiUrl}/api/v1/images/upload`, {
                   method: "POST",
                   body: formData,

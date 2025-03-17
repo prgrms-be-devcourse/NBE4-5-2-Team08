@@ -7,7 +7,7 @@ export async function checkLoginStatus(): Promise<boolean> {
       return true;
     }
 
-    const response = await fetch("http://localhost:8080/api/v1/members/me", {
+    const response = await fetch("http://52.78.27.224/api/v1/members/me", {
       credentials: "include",
     });
 

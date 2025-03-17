@@ -100,7 +100,7 @@ export default function CreateCurationPage() {
       };
 
       // API 호출
-      const response = await fetch("http://localhost:8080/api/v1/curation", {
+      const response = await fetch("http://52.78.27.224/api/v1/curation", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -99,7 +99,7 @@ export default function PlaylistDetailPage() {
 
         // 플레이리스트 데이터 가져오기
         const response = await fetch(
-          `http://localhost:8080/api/v1/playlists/${params.id}${queryString}`,
+          `http://52.78.27.224/api/v1/playlists/${params.id}${queryString}`,
           {
             ...(sessionStorage.getItem("isLoggedIn") === "true"
               ? { credentials: "include" }
@@ -153,7 +153,7 @@ export default function PlaylistDetailPage() {
         if (sessionStorage.getItem("isLoggedIn") === "true") {
           try {
             const likeStatusResponse = await fetch(
-              `http://localhost:8080/api/v1/playlists/${params.id}/like/status?_t=${timestamp}`,
+              `http://52.78.27.224/api/v1/playlists/${params.id}/like/status?_t=${timestamp}`,
               {
                 credentials: "include",
                 cache: "no-store",
@@ -187,7 +187,7 @@ export default function PlaylistDetailPage() {
         // 추천 플레이리스트 가져오기 (실패해도 무시)
         try {
           const recResponse = await fetch(
-            `http://localhost:8080/api/v1/playlists/${params.id}/recommendation?_t=${timestamp}`,
+            `http://52.78.27.224/api/v1/playlists/${params.id}/recommendation?_t=${timestamp}`,
             {
               ...(sessionStorage.getItem("isLoggedIn") === "true"
                 ? { credentials: "include" }

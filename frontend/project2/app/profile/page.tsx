@@ -76,17 +76,14 @@ export default function ProfilePage() {
     const fetchUserProfile = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(
-          "http://localhost:8080/api/v1/members/me",
-          {
-            credentials: "include",
-            // 캐시 제어 추가
-            cache: "no-store",
-            headers: {
-              "Cache-Control": "no-cache",
-            },
-          }
-        );
+        const response = await fetch("http://52.78.27.224/api/v1/members/me", {
+          credentials: "include",
+          // 캐시 제어 추가
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache",
+          },
+        });
 
         if (!response.ok) {
           if (response.status === 401) {
@@ -177,7 +174,7 @@ export default function ProfilePage() {
       formData.append("file", file);
 
       const response = await fetch(
-        "http://localhost:8080/api/v1/members/profile/images/upload",
+        "http://52.78.27.224/api/v1/members/profile/images/upload",
         {
           method: "POST",
           body: formData,
@@ -199,7 +196,7 @@ export default function ProfilePage() {
 
         // 새로운 이미지 URL을 가져오기 위해 프로필 정보 다시 로드
         const userResponse = await fetch(
-          "http://localhost:8080/api/v1/members/me",
+          "http://52.78.27.224/api/v1/members/me",
           {
             credentials: "include",
           }
@@ -249,7 +246,7 @@ export default function ProfilePage() {
 
       // memberId를 URL에 포함하여 API 호출
       const response = await fetch(
-        `http://localhost:8080/api/v1/members/${profile.memberId}`,
+        `http://52.78.27.224/api/v1/members/${profile.memberId}`,
         {
           method: "PUT",
           headers: {
@@ -300,7 +297,7 @@ export default function ProfilePage() {
 
       // 계정 삭제 API 호출
       const response = await fetch(
-        `http://localhost:8080/api/v1/members/delete`,
+        `http://52.78.27.224/api/v1/members/delete`,
         {
           method: "DELETE",
           credentials: "include",

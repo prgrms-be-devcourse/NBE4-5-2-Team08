@@ -14,7 +14,7 @@ export default function LeftSidebar() {
       try {
         setIsLoading(true);
         const response = await fetch(
-          "http://localhost:8080/api/v1/curation/trending-tag",
+          "http://52.78.27.224/api/v1/curation/trending-tag",
           {
             cache: "no-store",
           }

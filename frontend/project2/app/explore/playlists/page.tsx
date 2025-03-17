@@ -74,7 +74,7 @@ export default function ExplorePlaylists() {
       try {
         setIsLoading(true);
         const res = await fetch(
-          "http://localhost:8080/api/v1/playlists/explore",
+          "http://52.78.27.224/api/v1/playlists/explore",
           {
             // 로그인한 경우에만 credentials 포함
             ...(sessionStorage.getItem("isLoggedIn") === "true"
@@ -123,7 +123,7 @@ export default function ExplorePlaylists() {
 
       // 플레이리스트 복제 API 호출
       const response = await fetch(
-        `http://localhost:8080/api/v1/playlists/${playlistId}`,
+        `http://52.78.27.224/api/v1/playlists/${playlistId}`,
         {
           method: "POST",
           credentials: "include",

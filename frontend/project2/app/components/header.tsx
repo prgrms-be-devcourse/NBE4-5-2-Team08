@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 
-const API_URL = "http://localhost:8080";
+const API_URL = "http://52.78.27.224";
 
 export default function Header() {
   const router = useRouter();
@@ -50,12 +50,9 @@ export default function Header() {
 
     const checkLoginStatus = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:8080/api/v1/members/me",
-          {
-            credentials: "include",
-          }
-        );
+        const response = await fetch("http://52.78.27.224/api/v1/members/me", {
+          credentials: "include",
+        });
 
         if (response.ok) {
         }
@@ -88,7 +85,7 @@ export default function Header() {
 
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:8080/api/v1/members/me", {
+      const response = await fetch("http://52.78.27.224/api/v1/members/me", {
         credentials: "include",
       });
 
@@ -242,7 +239,7 @@ export default function Header() {
     console.log("로그아웃 요청 시작...");
     try {
       const response = await fetch(
-        "http://localhost:8080/api/v1/members/logout",
+        "http://52.78.27.224/api/v1/members/logout",
         {
           method: "POST",
           credentials: "include",

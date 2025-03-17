@@ -19,7 +19,7 @@ export default function EditPlaylistPage() {
       try {
         setIsLoading(true);
         const response = await fetch(
-          `http://localhost:8080/api/v1/playlists/${params.id}`,
+          `http://52.78.27.224/api/v1/playlists/${params.id}`,
           {
             credentials: "include",
           }

@@ -11,7 +11,7 @@ import { toast } from "@/components/ui/use-toast";
 
 // API URL을 하드코딩된 값에서 환경 변수로 변경합니다.
 // 파일 상단에 다음 상수를 추가합니다:
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://52.78.27.224";
 const PAGE_SIZE = 20; // 한 번에 로드할 아이템 수
 
 // Curation 데이터 인터페이스 정의

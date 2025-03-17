@@ -37,12 +37,9 @@ export default function LoginPage() {
 
     const checkLoginStatus = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:8080/api/v1/members/me",
-          {
-            credentials: "include",
-          }
-        );
+        const response = await fetch("http://52.78.27.224/api/v1/members/me", {
+          credentials: "include",
+        });
 
         if (response.ok) {
           // 이미 로그인된 상태면 홈으로 이동
@@ -68,20 +65,17 @@ export default function LoginPage() {
 
     try {
       // 로그인 요청
-      const response = await fetch(
-        "http://localhost:8080/api/v1/members/login",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            username: formData.memberId,
-            password: formData.password,
-          }),
-        }
-      );
+      const response = await fetch("http://52.78.27.224/api/v1/members/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          username: formData.memberId,
+          password: formData.password,
+        }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -94,7 +88,7 @@ export default function LoginPage() {
         try {
           // 사용자 정보 가져오기
           const userResponse = await fetch(
-            "http://localhost:8080/api/v1/members/me",
+            "http://52.78.27.224/api/v1/members/me",
             {
               credentials: "include",
             }
@@ -135,7 +129,7 @@ export default function LoginPage() {
             sessionStorage.getItem("loginRedirectPath") || "/home";
           sessionStorage.removeItem("loginRedirectPath"); // 사용 후 삭제
 
-          // 페이지 이동 대신 window.location을 사용하여 전체 페이지 새로고침과 함께 이동
+          // 페이지 이동 대신 window.location을 사용하여 전체 ���이지 새로고침과 함께 이동
           setTimeout(() => {
             window.location.href = redirectPath;
           }, 200);
