@@ -117,11 +117,10 @@ public class Rq {
      */
     public void addCookie(String name, String value) {
         Cookie cookie = new Cookie(name, value);
-        cookie.setDomain(".linkurator.store");
         cookie.setPath("/");
         cookie.setHttpOnly(true);
         cookie.setSecure(true);
-        cookie.setAttribute("SameSite", "Strict");
+        cookie.setAttribute("SameSite", "None");
         response.addCookie(cookie);
     }
 
