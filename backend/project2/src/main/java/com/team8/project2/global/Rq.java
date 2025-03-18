@@ -117,7 +117,7 @@ public class Rq {
      */
     public void addCookie(String name, String value) {
         Cookie cookie = new Cookie(name, value);
-        cookie.setDomain("localhost");
+        cookie.setDomain("linkurator.netlify.app");
         cookie.setPath("/");
         cookie.setHttpOnly(true);
         cookie.setSecure(true);
@@ -138,11 +138,11 @@ public class Rq {
      */
     public void removeCookie(String name) {
         Cookie cookie = new Cookie(name, null);
-        cookie.setDomain("localhost");
+        cookie.setDomain(".linkurator.store");
         cookie.setPath("/");
         cookie.setHttpOnly(true);
         cookie.setSecure(true);
-        cookie.setAttribute("SameSite", "Strict");
+        cookie.setAttribute("SameSite", "None");
         cookie.setMaxAge(0);
         response.addCookie(cookie);
     }
